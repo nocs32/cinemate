@@ -12,7 +12,7 @@ Watch videos together with friends in the browser, in sync and at full quality.
 - **Only for you:** volume, quality, subtitles and fullscreen stay personal.
 - **Chat and reactions,** in English or Ukrainian, on a computer or a phone. A room disappears about 10 minutes after the last person leaves.
 
-> **Status:** the web UI (M1) is built against the demo room: the start page, the join card, the screen with YouTube and file players, the waiting slate and "Go on without", the film-leader countdown, "Up next", the queue, the chat, reactions, phones, and English and Ukrainian. The server (M2) comes next; until then `pnpm dev` also opens the demo room.
+> **Status:** live rooms work end to end. The web UI (M1) and the server (M2) are built: rooms by link on core-api, the shared queue with YouTube titles from YouTube, play, pause, seek and skip for everyone, the waiting slate and "Go on without", the film-leader countdown, "Up next", the chat and reactions, in English and Ukrainian, on computers and phones. Two tabs stayed within about 150 ms of the room in testing. Next: hosting at cinemate.timnox.dev.
 
 ## Stack
 
@@ -38,6 +38,8 @@ pnpm dev
 |---|---|
 | Web | http://localhost:5179 |
 | API | http://localhost:2573 (the web dev server forwards `/api/*`, and `/live` for rooms, to it) |
+
+Open the web URL and click **Open a room**, then share its link: everyone who opens it is in the same room. To try it alone, open the link in a second tab. Saving a file in `modules/core-api` restarts the API, which clears every room: open a new one afterwards.
 
 `pnpm demo` runs the web app alone against a demo room in the browser, with no API: three sample viewers come in and fill the queue with Blender's open movies, and a fourth joins later. The **Demo** menu in the top bar makes Dima buffer, gives Oleh an ad (long enough to try "Go on without Oleh"), makes Marta fall behind, or adds and removes a viewer.
 

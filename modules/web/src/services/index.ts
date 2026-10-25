@@ -1,6 +1,7 @@
 import { createAddress } from './address';
 import { createDemoRoom } from './demo-room';
 import { createFullscreen } from './fullscreen';
+import { createLiveRoom } from './live-room';
 import { createPlayerFactory } from './players';
 import { createPreferences } from './preferences';
 import { createTranslator } from './translator';
@@ -47,14 +48,16 @@ const repeat: Schedule = (callback, intervalMs) => {
 
 const createId = (): string => crypto.randomUUID();
 
+const isDemo = import.meta.env.MODE === 'demo';
+
 export const createServices = (): Services => ({
   preferences: createPreferences(),
   translator: createTranslator(),
   clipboard: { writeText: (text) => navigator.clipboard.writeText(text) },
   address: createAddress(),
-  // The web UI is built against the demo room (spec §12 M1): the engine's cinema and sample viewers
-  // in the browser, with no server. Live rooms on core-api come with M2.
-  cinemaClient: createDemoRoom({ schedule, repeat, random: Math.random, now: Date.now, createId }),
+  // Live rooms on core-api; `pnpm demo` (Vite's demo mode) plays in the demo room instead: the
+  // engine's cinema and sample viewers in the browser, with no server.
+  cinemaClient: isDemo ? createDemoRoom({ schedule, repeat, random: Math.random, now: Date.now, createId }) : createLiveRoom(window.location.origin, Date.now),
   createPlayer: createPlayerFactory(),
   fullscreen: createFullscreen(),
   schedule,
