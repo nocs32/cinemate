@@ -1,0 +1,25 @@
+{
+  "name": "cinemate",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.21.0",
+  "scripts": {
+    "dev": "pnpm --parallel --recursive run dev",
+    "demo": "pnpm --filter @cinemate/web dev --mode demo",
+    "lint": "eslint .",
+    "typecheck": "pnpm --recursive run typecheck",
+    "test": "pnpm --recursive run test",
+    "build": "pnpm --recursive run build",
+    "preview": "pnpm build && concurrently --kill-others --names api,web --prefix-colors blue,magenta \"pnpm --filter @cinemate/core-api start\" \"pnpm --filter @cinemate/web preview\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "concurrently": "^10.0.5",
+    "eslint": "^10.12.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.0"
+  }
+}

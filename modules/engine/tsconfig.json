@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // DOM only for `URL`, which Node and browsers both have (links.ts). Lint keeps window and document out.
+    "lib": ["ES2023", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": []
+  },
+  "include": ["src"]
+}
