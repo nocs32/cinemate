@@ -14,7 +14,7 @@ Setup commit first (M0), then each phase gets its own branch and PR (spec D23, Â
 1. **Web UI** (`feat/web-ui`), on local MobX stores against the demo room (the engine's `Cinema` in the browser, with sample viewers who buffer, lag and watch ads on cue).
 2. **Backend, and connecting the UI to it** (`feat/live-rooms`).
 3. **CI** (`feat/ci`). The workflow came with the setup commit and checks every PR and push to `main`.
-4. **Hosting** in `../tables-host`: a `cinemate` service, a Caddy site, the tunnel route and **cinemate.timnox.dev** (spec D22).
+4. **Hosting** in `../tables-host`: a `cinemate` service, a Caddy site, the tunnel route and **cinemate.timnox.dev** (spec D22). Live since 2026-10-25. Update it with `ssh pi 'cd ~/tables-host && ./deploy.sh cinemate'` after merging to `main`; the tunnel restarts only when its config changes.
 
 **Verify end to end in the built-in browser,** with two or three tabs (muted) and the sync numbers on screen. Check every screen on a phone held sideways (812 Ã— 375).
 

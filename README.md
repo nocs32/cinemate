@@ -12,7 +12,7 @@ Watch videos together with friends in the browser, in sync and at full quality.
 - **Only for you:** volume, quality, subtitles and fullscreen stay personal.
 - **Chat and reactions,** in English or Ukrainian, on a computer or a phone. A room disappears about 10 minutes after the last person leaves.
 
-> **Status:** live rooms work end to end. The web UI (M1) and the server (M2) are built: rooms by link on core-api, the shared queue with YouTube titles from YouTube, play, pause, seek and skip for everyone, the waiting slate and "Go on without", the film-leader countdown, "Up next", the chat and reactions, in English and Ukrainian, on computers and phones. Two tabs stayed within about 150 ms of the room in testing. Next: hosting at cinemate.timnox.dev.
+> **Status:** live rooms work end to end. The web UI (M1) and the server (M2) are built: rooms by link on core-api, the shared queue with YouTube titles from YouTube, play, pause, seek and skip for everyone, the waiting slate and "Go on without", the film-leader countdown, "Up next", the chat and reactions, in English and Ukrainian, on computers and phones. Two tabs stayed within about 150 ms of the room in testing. It's hosted on a Raspberry Pi at **https://cinemate.timnox.dev**, through [tables-host](https://github.com/nocs32/tables-host).
 
 ## Stack
 
