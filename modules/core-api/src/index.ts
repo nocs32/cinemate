@@ -1,5 +1,7 @@
 import { Server } from '@colyseus/core';
 import { WebSocketTransport } from '@colyseus/ws-transport';
+import { cinemaRoomName } from '@cinemate/protocol';
+import { CinemaRoom } from './cinema-room/index.js';
 import { config } from './config.js';
 import { describeError, errorMiddleware, notFoundMiddleware } from './errors/index.js';
 import { healthRouter } from './health/index.js';
@@ -16,6 +18,8 @@ const server = new Server({
     app.use(errorMiddleware);
   },
 });
+
+server.define(cinemaRoomName, CinemaRoom);
 
 server.listen(config.port).then(
   () => {
