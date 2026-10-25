@@ -128,8 +128,9 @@ export class DemoReferee {
 
     if (name === member.name) return;
 
-    member.name = name;
+    // The line keeps the old name: "Anna is now Anna K".
     this.#feed.system(member, { type: 'renamed', name });
+    member.name = name;
   }
 
   #recolor(id: string, color: ViewerColor): void {

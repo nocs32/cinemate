@@ -8,8 +8,9 @@ import { PasteBoxButton, PasteBoxInput, PasteBoxNote, PasteBoxRoot, PasteBoxWrap
 
 interface PasteBoxProps {
   paste: RoomPasteStore;
-  // The empty screen's box is bigger, with the lamp's button.
-  size: 'bar' | 'stage';
+  // The top bar's, the one under the queue (its note shows above it), or the empty screen's, bigger
+  // and with the lamp's button.
+  size: 'bar' | 'side' | 'stage';
   placeholder: string;
   buttonLabel: string;
 }
@@ -21,7 +22,7 @@ export const PasteBox = observer(function PasteBox({ paste, size, placeholder, b
   return (
     <PasteBoxWrap size={size}>
       <PasteBoxRoot size={size} refused={paste.isRefused} onSubmit={withoutDefault(paste.submit)}>
-        {size === 'bar' && <LinkIcon />}
+        {size !== 'stage' && <LinkIcon />}
         <PasteBoxInput
           value={paste.draft}
           placeholder={placeholder}

@@ -2,13 +2,12 @@ import { observer } from 'mobx-react-lite';
 import type { ReactElement } from 'react';
 import { useRootStore } from '../../../stores/use-root-store';
 import { RoomSideChat } from './chat';
-import { RoomSideComposer } from './composer';
 import { RoomSidePlayed } from './played';
 import { RoomSideQueue } from './queue';
 import { RoomSideBadge, RoomSideCount, RoomSidePanel, RoomSideRoot, RoomSideTab, RoomSideTabs } from './styled-components';
 
-// The sidebar (the style board): what's up next, the chat, and what played tonight, with the chat
-// box and reactions under all three.
+// The sidebar (the style board): what's up next (with a box to paste a link under it), the chat
+// (with the chat box and reactions under it), and what played tonight.
 export const RoomSide = observer(function RoomSide(): ReactElement {
   const { locale, room, ui } = useRootStore();
   const { side, queue, feed } = room;
@@ -35,7 +34,6 @@ export const RoomSide = observer(function RoomSide(): ReactElement {
       <RoomSidePanel value="played">
         <RoomSidePlayed />
       </RoomSidePanel>
-      <RoomSideComposer />
     </RoomSideRoot>
   );
 });

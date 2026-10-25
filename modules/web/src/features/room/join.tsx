@@ -3,8 +3,8 @@ import type { ReactElement } from 'react';
 import { useRootStore } from '../../stores/use-root-store';
 import { LampButton } from '../../ui';
 import { withoutDefault } from '../../utils';
-import { RoomJoinSwatch } from './join-swatch';
-import { RoomJoinCard, RoomJoinField, RoomJoinHint, RoomJoinInput, RoomJoinLabel, RoomJoinRoot, RoomJoinSwatches, RoomJoinText, RoomJoinTitle } from './styled-components';
+import { ColorPicker } from './color-picker';
+import { RoomJoinCard, RoomJoinField, RoomJoinHint, RoomJoinInput, RoomJoinLabel, RoomJoinRoot, RoomJoinText, RoomJoinTitle } from './styled-components';
 
 // The join card (spec §9) for someone who came in by link: who's here and what's on, your name and
 // colour, then Join. The click is also what lets the browser play sound.
@@ -23,11 +23,7 @@ export const RoomJoin = observer(function RoomJoin(): ReactElement {
         </RoomJoinField>
         <RoomJoinField>
           <RoomJoinLabel as="span">{locale.t('join.color')}</RoomJoinLabel>
-          <RoomJoinSwatches>
-            {join.swatches.map((swatch) => (
-              <RoomJoinSwatch key={swatch.color} swatch={swatch} onPick={join.pick} />
-            ))}
-          </RoomJoinSwatches>
+          <ColorPicker swatches={join.swatches} onPick={join.pick} hasTaken={join.hasTakenColors} />
         </RoomJoinField>
         <LampButton type="submit" size="lg" disabled={!join.canEnter}>
           {locale.t('join.go')}

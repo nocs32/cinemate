@@ -5,16 +5,17 @@ import { RoomTheatreScreenCatchingUp } from './catching-up';
 import { RoomTheatreScreenEmpty } from './empty';
 import { RoomTheatreScreenFlights } from './flights';
 import { RoomTheatreScreenLeader } from './leader';
+import { RoomTheatreScreenPlay } from './play';
 import { RoomTheatreScreenSlate } from './slate';
+import { RoomTheatreScreenSound } from './sound';
 import { RoomTheatreScreenFrame, RoomTheatreScreenPlayer, RoomTheatreScreenSpill, RoomTheatreScreenWrap } from './styled-components';
-import { RoomTheatreScreenUnblock } from './unblock';
 import { RoomTheatreScreenUpNext } from './up-next';
 import { useRoomTheatreScreenFrame } from './use-frame';
 import { useRoomTheatreScreenPlayer } from './use-player';
 
 // The screen (spec §9, the style board): the player, the light from the frame spilling onto the wall
 // around it, and whatever is drawn over it: the empty room, the waiting slate, the film leader, "Up
-// next", reactions.
+// next", the big play button while paused, reactions.
 export const RoomTheatreScreen = observer(function RoomTheatreScreen(): ReactElement {
   const { locale, room } = useRootStore();
   const { screen, driver, controls, lights } = room;
@@ -31,8 +32,9 @@ export const RoomTheatreScreen = observer(function RoomTheatreScreen(): ReactEle
         {overlay === 'upNext' && <RoomTheatreScreenUpNext />}
         {overlay === 'waiting' && <RoomTheatreScreenSlate />}
         {overlay === 'leader' && <RoomTheatreScreenLeader />}
+        {overlay === 'paused' && <RoomTheatreScreenPlay />}
         {overlay === 'none' && screen.isCatchingUp && <RoomTheatreScreenCatchingUp />}
-        {driver.needsClick && <RoomTheatreScreenUnblock />}
+        {driver.isSoundBlocked && <RoomTheatreScreenSound />}
         <RoomTheatreScreenFlights />
       </RoomTheatreScreenFrame>
     </RoomTheatreScreenWrap>

@@ -1,25 +1,23 @@
 import { syncLimits } from '@cinemate/protocol';
 import { expect, test } from 'vitest';
 import { CinemaRuleError } from './index.js';
-import { author, createTestCinema, film, type TestCinema } from './test-cinema.js';
+import { author, createTestCinema, film, startTogether, type TestCinema } from './test-cinema.js';
 
 // Everyone in step, a little past the start's grace.
 const playingTogether = (people: string[]): TestCinema => {
   const room = createTestCinema(people);
 
-  room.cinema.add(author(people[0] ?? 'a'), film(), 'Big Buck Bunny', room.now());
-  room.ready(...people);
-  room.advance(syncLimits.countdownMs + syncLimits.startupGraceMs);
+  startTogether(room, people);
 
   return room;
 };
 
-test('a link added to an empty room loads for everyone, then counts down and plays', () => {
+test('a link added to an empty room loads paused for everyone, and plays when someone presses play', () => {
   const room = createTestCinema(['anna', 'dima']);
 
   room.cinema.add(author('anna'), film(), 'Big Buck Bunny', room.now());
 
-  expect(room.cinema.view().playback).toMatchObject({ phase: 'loading', reason: 'start', waitingFor: ['anna', 'dima'] });
+  expect(room.cinema.view().playback).toMatchObject({ phase: 'loading', reason: 'start', resume: false, waitingFor: ['anna', 'dima'] });
 
   room.ready('anna');
 
@@ -27,7 +25,22 @@ test('a link added to an empty room loads for everyone, then counts down and pla
 
   room.ready('dima');
 
-  expect(room.cinema.view().playback).toMatchObject({ phase: 'playing', countdown: true, at: room.now() + syncLimits.countdownMs });
+  expect(room.cinema.view().playback).toMatchObject({ phase: 'paused', position: 0 });
+
+  room.cinema.play('dima', room.now());
+  room.ready('anna', 'dima');
+
+  expect(room.cinema.view().playback).toMatchObject({ phase: 'playing', at: room.now() + syncLimits.quickStartMs });
+});
+
+test('after "Up next" and after a skip, the next video plays by itself, counting down', () => {
+  const room = playingTogether(['anna']);
+
+  room.cinema.add(author('anna'), film('R6MlUcmOul8'), 'Tears of Steel', room.now());
+  room.cinema.skip('anna', room.now());
+  room.ready('anna');
+
+  expect(room.cinema.view().playback).toMatchObject({ phase: 'playing', countdown: true, item: { title: 'Tears of Steel' } });
 });
 
 test('someone buffering makes the room wait for them, and it says who', () => {
@@ -103,7 +116,7 @@ test('people still on the join card are never waited for', () => {
   room.cinema.add(author('anna'), film(), null, room.now());
   room.ready('anna');
 
-  expect(room.cinema.view().playback.phase).toBe('playing');
+  expect(room.cinema.view().playback.phase).toBe('paused');
   expect(room.cinema.member('taras', room.now())?.status).toBe('joining');
 });
 
@@ -170,5 +183,20 @@ test('skip goes to the next video, and the queue reorders and replays', () => {
 
   expect(cinema.view().queue.map((item) => item.title)).toEqual(['Sintel', 'Big Buck Bunny']);
   expect(replayed.id).not.toBe(sintel.id);
-  expect(() => cinema.remove('anna', 'nope')).toThrow(CinemaRuleError);
+  expect(() => cinema.remove('anna', 'nope', room.now())).toThrow(CinemaRuleError);
+});
+
+test('removing the video on screen goes straight to the next one, and keeps it out of the history', () => {
+  const room = playingTogether(['anna']);
+  const { cinema } = room;
+
+  cinema.add(author('anna'), film('R6MlUcmOul8'), 'Tears of Steel', room.now());
+  cinema.remove('anna', cinema.view().playback.item?.id ?? '', room.now());
+
+  expect(cinema.view().playback).toMatchObject({ phase: 'loading', resume: true, item: { title: 'Tears of Steel' } });
+  expect(cinema.view().history).toEqual([]);
+  expect(cinema.drainNotices().at(-1)?.event).toEqual({ type: 'removed', title: 'Big Buck Bunny' });
+
+  cinema.remove('anna', cinema.view().playback.item?.id ?? '', room.now());
+  expect(cinema.view().playback.phase).toBe('ended');
 });

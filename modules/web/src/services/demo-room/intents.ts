@@ -35,7 +35,7 @@ export const demoHandlers = (moves: DemoMoves): DemoHandlers => {
     chat: (id, { text }) => moves.chat(id, text),
     react: ignore,
     add: (id, { url }) => moves.add(id, url),
-    remove: (id, { itemId }) => cinema.remove(id, itemId),
+    remove: (id, { itemId }) => cinema.remove(id, itemId, now()),
     move: (_id, { itemId, toIndex }) => cinema.move(itemId, toIndex),
     replay: (id, { itemId }) => moves.replay(id, itemId),
     describe: (_id, { itemId, duration, title }) => cinema.describe(itemId, { duration: duration > 0 ? duration : null, title }),

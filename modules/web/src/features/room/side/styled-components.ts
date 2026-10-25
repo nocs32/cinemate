@@ -1,9 +1,10 @@
+import { Popover } from '@ark-ui/react/popover';
 import { Tabs } from '@ark-ui/react/tabs';
 import { styled } from 'styled-system/jsx';
 import { viewerTones } from '../../../ui';
 
 export const RoomSideRoot = styled(Tabs.Root, {
-  base: { bg: 'bg.panel', display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr) auto auto', minHeight: '0', minWidth: '0', transition: 'opacity 0.6s ease' },
+  base: { bg: 'bg.panel', display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr)', minHeight: '0', minWidth: '0', transition: 'opacity 0.6s ease' },
   variants: {
     dimmed: { true: { opacity: '0.28' } },
   },
@@ -82,11 +83,13 @@ export const RoomSideTicketRoot = styled('li', {
   },
   variants: {
     next: { true: { bg: 'bg.raisedHigh', '& > span:first-child': { color: 'accent.default' } } },
+    // The video on screen: lit by the lamp along its edge.
+    now: { true: { bg: 'bg.raisedHigh', boxShadow: 'inset 3px 0 0 {colors.accent.default}', '& > span:first-child': { color: 'accent.default', fontSize: '10px', letterSpacing: '0' } } },
     dragged: { true: { opacity: '0.4' } },
     played: { true: { opacity: '0.75', _hover: { opacity: '1' } } },
     compact: { true: { gridTemplateColumns: '24px 64px minmax(0, 1fr) auto', gap: '8px', padding: '6px 2px 6px 0', mask: 'radial-gradient(circle 6px at 24px 0, transparent 98%, black) top / 100% 51% no-repeat, radial-gradient(circle 6px at 24px 100%, transparent 98%, black) bottom / 100% 51% no-repeat' } },
   },
-  compoundVariants: [{ next: false, played: false, css: { cursor: 'grab' } }],
+  compoundVariants: [{ next: false, played: false, now: false, css: { cursor: 'grab' } }],
 });
 
 export const RoomSideTicketPosition = styled('span', {
@@ -159,6 +162,23 @@ export const RoomSideTicketAction = styled('button', {
   },
 });
 
+// "Remove the video playing now?"
+export const RoomSideTicketRemoveNowContent = styled(Popover.Content, {
+  base: { width: '260px', bg: 'bg.panel', borderRadius: 'control', padding: '14px', boxShadow: 'floating', outline: '0', zIndex: '30', display: 'grid', gap: '8px', animation: 'dialogIn 0.15s ease' },
+});
+
+export const RoomSideTicketRemoveNowTitle = styled('p', {
+  base: { margin: '0', fontWeight: '600', fontSize: '14px' },
+});
+
+export const RoomSideTicketRemoveNowText = styled('p', {
+  base: { margin: '0', fontSize: '13px', color: 'fg.muted' },
+});
+
+export const RoomSideTicketRemoveNowActions = styled('div', {
+  base: { display: 'flex', gap: '8px', marginTop: '4px' },
+});
+
 export const RoomSideFeed = styled('div', {
   base: { flex: '1', minHeight: '0', overflowY: 'auto', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' },
 });
@@ -176,6 +196,14 @@ export const RoomSideChatLineSystem = styled('p', {
   base: { margin: '0', fontSize: '13px', color: 'fg.subtle' },
   variants: {
     warning: { true: { color: 'accent.default' } },
+  },
+});
+
+// Under the queue: the box to paste a link into.
+export const RoomSideFooter = styled('div', {
+  base: { padding: '12px 14px 14px', borderTop: '1px solid', borderColor: 'border.rule' },
+  variants: {
+    compact: { true: { padding: '6px 8px 8px' } },
   },
 });
 

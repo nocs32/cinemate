@@ -37,7 +37,13 @@ export const RoomTheatreScreenFrame = styled('div', {
     '&:fullscreen': { width: '100vw', height: '100vh', aspectRatio: 'auto', borderRadius: '0' },
   },
   variants: {
-    bare: { true: { bg: 'bg.room', outline: '1px dashed', outlineColor: 'border.seam', outlineOffset: '-1px' } },
+    // Nothing on: a dark screen with the projector's light pooled in the middle.
+    bare: {
+      true: {
+        bg: 'radial-gradient(ellipse 60% 55% at 50% 46%, rgba(255, 178, 63, 0.13), transparent 70%), radial-gradient(ellipse 90% 80% at 50% 50%, {colors.bg.panel}, {colors.bg.room} 75%)',
+        boxShadow: 'inset 0 0 0 1px {colors.border.rule}, inset 0 0 120px rgba(0, 0, 0, 0.45)',
+      },
+    },
   },
 });
 
@@ -50,16 +56,46 @@ export const RoomTheatreScreenScrim = styled('div', {
   base: { position: 'absolute', inset: '0', zIndex: '2', display: 'flex', alignItems: 'center', justifyContent: 'center', bg: 'bg.scrim', backdropFilter: 'blur(3px)', animation: 'fadeIn 0.25s ease', padding: '16px' },
 });
 
+// The empty room and the end of the queue: centred, over the film leader's rings, faint.
 export const RoomTheatreScreenEmptyRoot = styled('div', {
-  base: { position: 'absolute', inset: '0', zIndex: '2', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'clamp(16px, 6cqw, 48px)', maxWidth: '640px' },
+  base: {
+    position: 'absolute',
+    inset: '0',
+    zIndex: '2',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
+    padding: 'clamp(16px, 6cqw, 56px)',
+    overflow: 'hidden',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      width: 'min(78cqh, 70cqw)',
+      aspectRatio: '1',
+      borderRadius: 'full',
+      border: '1px solid rgba(236, 230, 240, 0.07)',
+      boxShadow: '0 0 0 min(7cqh, 6cqw) rgba(236, 230, 240, 0.018), inset 0 0 0 min(9cqh, 8cqw) rgba(236, 230, 240, 0.025)',
+      pointerEvents: 'none',
+    },
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      inset: '0',
+      bg: 'linear-gradient(rgba(236, 230, 240, 0.05), rgba(236, 230, 240, 0.05)) center / 1px 100% no-repeat, linear-gradient(rgba(236, 230, 240, 0.05), rgba(236, 230, 240, 0.05)) center / 100% 1px no-repeat',
+      pointerEvents: 'none',
+    },
+    '& > *': { position: 'relative', zIndex: '1' },
+  },
 });
 
 export const RoomTheatreScreenEmptyTitle = styled('h2', {
-  base: { margin: '0 0 12px', fontFamily: 'display', fontSize: 'clamp(20px, 5cqw, 34px)', lineHeight: '1.15', fontWeight: '700', letterSpacing: '-0.02em', textWrap: 'balance' },
+  base: { margin: '0 0 14px', fontFamily: 'display', fontSize: 'clamp(24px, 6.4cqw, 54px)', lineHeight: '1.08', fontWeight: '700', letterSpacing: '-0.025em', textWrap: 'balance', maxWidth: '16ch' },
 });
 
 export const RoomTheatreScreenEmptyText = styled('p', {
-  base: { margin: '0 0 22px', color: 'fg.muted', maxWidth: '60ch', '@container (max-height: 260px)': { display: 'none' } },
+  base: { margin: '0 0 clamp(18px, 4cqh, 32px)', color: 'fg.muted', fontSize: 'clamp(14px, 1.8cqw, 18px)', maxWidth: '52ch', textWrap: 'balance', '@container (max-height: 260px)': { display: 'none' } },
 });
 
 // The waiting slate.
@@ -181,12 +217,66 @@ export const RoomTheatreScreenUpNextActions = styled('div', {
   base: { display: 'flex', flexWrap: 'wrap', gap: '10px' },
 });
 
-export const RoomTheatreScreenUnblockRoot = styled('div', {
-  base: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' },
+// The big play button while paused: the frame stays visible around it.
+export const RoomTheatreScreenPlayRoot = styled('div', {
+  base: { position: 'absolute', inset: '0', zIndex: '2', display: 'grid', placeItems: 'center', bg: 'radial-gradient(circle, rgba(16, 12, 22, 0.55), rgba(16, 12, 22, 0.15) 60%)', animation: 'fadeIn 0.2s ease' },
 });
 
-export const RoomTheatreScreenUnblockText = styled('p', {
-  base: { margin: '0', color: 'fg.muted', maxWidth: '40ch' },
+export const RoomTheatreScreenPlayButton = styled('button', {
+  base: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '12px',
+    border: '0',
+    bg: 'transparent',
+    color: 'fg.default',
+    fontSize: '15px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    '&:hover > span:first-child': { transform: 'scale(1.06)' },
+  },
+});
+
+export const RoomTheatreScreenPlayCircle = styled('span', {
+  base: {
+    width: 'clamp(56px, 14cqh, 88px)',
+    aspectRatio: '1',
+    borderRadius: 'full',
+    bg: 'accent.default',
+    color: 'accent.ink',
+    display: 'grid',
+    placeItems: 'center',
+    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)',
+    transition: 'transform 0.15s ease',
+    '& svg': { width: '38%', height: '38%', marginLeft: '6%' },
+  },
+});
+
+export const RoomTheatreScreenPlayLabel = styled('span', {
+  base: { padding: '4px 12px', borderRadius: 'full', bg: 'bg.scrim', '@container (max-height: 220px)': { display: 'none' } },
+});
+
+// Sound waits for a click: a note in the corner, the video keeps playing (muted).
+export const RoomTheatreScreenSoundRoot = styled('p', {
+  base: {
+    position: 'absolute',
+    top: '12px',
+    right: '12px',
+    zIndex: '4',
+    margin: '0',
+    maxWidth: 'min(360px, 70%)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 12px',
+    borderRadius: 'control',
+    bg: 'bg.scrim',
+    fontSize: '13px',
+    pointerEvents: 'none',
+    animation: 'fadeIn 0.3s ease',
+    '& svg': { width: '16px', height: '16px', flex: 'none', color: 'accent.default' },
+  },
 });
 
 export const RoomTheatreScreenChip = styled('p', {

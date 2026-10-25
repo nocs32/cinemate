@@ -18,8 +18,8 @@ export interface RoomScreenDeps {
 }
 
 // What's drawn over the screen: nothing, the empty room, the end of the queue, "Up next", the
-// waiting slate, or the film leader counting down.
-export type ScreenOverlay = 'none' | 'empty' | 'ended' | 'upNext' | 'waiting' | 'leader';
+// waiting slate, the film leader counting down, or the big play button while it's paused.
+export type ScreenOverlay = 'none' | 'empty' | 'ended' | 'upNext' | 'waiting' | 'leader' | 'paused';
 
 const tickMs = 200;
 
@@ -123,7 +123,9 @@ export class RoomScreenStore {
 
     if (this.waiting.isShown) return 'waiting';
 
-    return this.isCountingDown ? 'leader' : 'none';
+    if (this.isCountingDown) return 'leader';
+
+    return phase === 'paused' ? 'paused' : 'none';
   }
 
   get leaderNumber(): string {

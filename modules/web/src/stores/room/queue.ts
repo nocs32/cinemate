@@ -16,6 +16,8 @@ export interface TicketView {
   addedByName: string;
   addedByColor: ViewerColor;
   isNext: boolean;
+  // The video on screen: the first ticket, marked "Now".
+  isNow: boolean;
   isDragged: boolean;
 }
 
@@ -28,11 +30,15 @@ export interface RoomQueueDeps {
 // A title for a video the room doesn't have one for yet.
 export const titleOf = (item: QueueItem, t: Translate): string => item.title ?? t(`now.untitled.${item.source.kind}`);
 
-// The queue and tonight's history, as tickets. Reordering is a drag: idle → dragging → (drop) idle.
+// The queue and tonight's history, as tickets, with the video on screen first. Reordering is a drag:
+// idle → dragging → (drop) idle. Removing the video on screen asks first: idle → confirming → idle.
 export class RoomQueueStore {
   items: QueueItem[] = [];
   history: QueueItem[] = [];
+  // The video on screen, if there is one.
+  current: QueueItem | null = null;
   dragged: string | null = null;
+  isConfirmingRemoveNow = false;
   readonly #deps: RoomQueueDeps;
 
   constructor(deps: RoomQueueDeps) {
@@ -44,8 +50,18 @@ export class RoomQueueStore {
     return this.items.map((item, index) => this.#toTicket(item, String(index + 1), index === 0));
   }
 
+  get nowTicket(): TicketView | null {
+    return this.current ? { ...this.#toTicket(this.current, this.#deps.t('queue.now'), false), isNow: true } : null;
+  }
+
   get played(): TicketView[] {
     return this.history.map((item) => this.#toTicket(item, '✓', false));
+  }
+
+  get removeNowText(): string {
+    const { t } = this.#deps;
+
+    return this.next ? t('queue.removeNow.next', { title: titleOf(this.next, t) }) : t('queue.removeNow.last');
   }
 
   get next(): QueueItem | undefined {
@@ -61,16 +77,33 @@ export class RoomQueueStore {
   }
 
   get isEmpty(): boolean {
-    return this.items.length === 0;
+    return this.items.length === 0 && this.current === null;
   }
 
   get hasPlayed(): boolean {
     return this.history.length > 0;
   }
 
-  receive(items: QueueItem[], history: QueueItem[]): void {
+  receive(items: QueueItem[], history: QueueItem[], current: QueueItem | null): void {
     this.items = items;
     this.history = history;
+
+    if (current?.id !== this.current?.id) this.isConfirmingRemoveNow = false;
+
+    this.current = current;
+  }
+
+  toggleRemoveNow(open: boolean): void {
+    this.isConfirmingRemoveNow = open && this.current !== null;
+  }
+
+  // Confirmed: the video on screen goes for everyone, and the next one starts.
+  removeNow(): void {
+    const { current } = this;
+
+    this.isConfirmingRemoveNow = false;
+
+    if (current) this.#deps.send('remove', { itemId: current.id });
   }
 
   remove(itemId: string): void {
@@ -122,6 +155,7 @@ export class RoomQueueStore {
       addedByName: author?.name ?? item.addedBy.name,
       addedByColor: author?.color ?? item.addedBy.color,
       isNext,
+      isNow: false,
       isDragged: this.dragged === item.id,
     };
   }

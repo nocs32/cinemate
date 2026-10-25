@@ -129,8 +129,10 @@ export interface ScreenPlayer {
   setVolume: (volume: VolumePreference) => void;
   quality: () => QualityChoice | null;
   setQuality: (index: number) => void;
-  // Only the browser blocked playing: one click on the page fixes it.
-  needsClick: () => boolean;
+  // Playing muted because nobody has clicked on the page yet (browsers block sound until then).
+  soundBlocked: () => boolean;
+  // A click happened: sound may play now.
+  allowSound: () => void;
   destroy: () => void;
 }
 

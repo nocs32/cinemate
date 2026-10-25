@@ -8,6 +8,7 @@ export const en = {
     toggle: 'Language: English. Switch to Ukrainian',
   },
   brand: 'Cinemate',
+  home: 'Go to the start page (you leave this room)',
   colors: {
     teal: 'Teal',
     sky: 'Sky blue',
@@ -67,8 +68,15 @@ export const en = {
     name: 'Your name',
     color: 'Your colour',
     colorTaken: '{{name}} wears this colour',
+    takenHint: 'A colour with a letter is taken: the letter is who wears it.',
     go: 'Join the room',
     hint: 'Your browser needs this click before it can play sound.',
+  },
+  profile: {
+    title: 'You',
+    edit: 'Change your name and colour',
+    hint: 'Saved in this browser for every room.',
+    save: 'Save',
   },
   paste: {
     placeholder: 'Paste a YouTube or video link to add it to the queue',

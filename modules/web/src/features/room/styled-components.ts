@@ -114,24 +114,37 @@ export const RoomJoinInput = styled('input', {
   base: { width: '100%', height: '44px', bg: 'bg.raised', border: '1px solid transparent', borderRadius: 'control', paddingInline: '14px', outline: '0', _focus: { borderColor: 'accent.default' } },
 });
 
-export const RoomJoinSwatches = styled('div', {
-  base: { display: 'flex', flexWrap: 'wrap', gap: '10px' },
+// The colour picker: the join card's and your seat's popup's.
+export const ColorPickerList = styled('div', {
+  base: { display: 'flex', flexWrap: 'wrap', gap: '8px' },
 });
 
-export const RoomJoinSwatchButton = styled('button', {
+export const ColorPickerSwatchButton = styled('button', {
   base: {
     width: '30px',
     height: '30px',
     borderRadius: 'full',
     border: '0',
     bg: 'var(--tone)',
+    display: 'grid',
+    placeItems: 'center',
+    fontFamily: 'display',
+    fontSize: '12px',
+    fontWeight: '700',
+    color: 'bg.room',
     cursor: 'pointer',
-    _disabled: { opacity: '0.25', cursor: 'not-allowed' },
+    transition: 'transform 0.12s ease',
+    _hover: { transform: 'scale(1.08)' },
+    _disabled: { opacity: '0.4', cursor: 'not-allowed', _hover: { transform: 'none' } },
   },
   variants: {
     tone: viewerTones,
     picked: { true: { boxShadow: '0 0 0 2px {colors.bg.panel}, 0 0 0 4px {colors.fg.default}' } },
   },
+});
+
+export const ColorPickerHint = styled('p', {
+  base: { margin: '0', fontSize: '12px', color: 'fg.subtle' },
 });
 
 export const RoomJoinHint = styled('p', {
@@ -144,7 +157,8 @@ export const PasteBoxWrap = styled('div', {
   variants: {
     size: {
       bar: { maxWidth: '620px', justifySelf: 'center' },
-      stage: {},
+      side: {},
+      stage: { maxWidth: '640px' },
     },
   },
 });
@@ -163,7 +177,17 @@ export const PasteBoxRoot = styled('form', {
   variants: {
     size: {
       bar: { height: '40px', padding: '0 6px 0 14px' },
-      stage: { height: '52px', padding: '0 7px 0 16px', bg: 'bg.panel' },
+      side: { height: '38px', padding: '0 5px 0 12px' },
+      stage: {
+        height: 'clamp(48px, 9cqh, 64px)',
+        padding: '0 8px 0 20px',
+        bg: 'rgba(16, 12, 22, 0.7)',
+        backdropFilter: 'blur(6px)',
+        border: '1px solid',
+        borderColor: 'border.seam',
+        boxShadow: '0 18px 50px -18px rgba(0, 0, 0, 0.8)',
+        '& input': { fontSize: 'clamp(14px, 1.7cqw, 17px)' },
+      },
     },
     refused: { true: { borderColor: 'late', _focusWithin: { borderColor: 'late' } } },
   },
@@ -178,7 +202,8 @@ export const PasteBoxButton = styled('button', {
   variants: {
     size: {
       bar: { bg: 'bg.raisedHigh', padding: '5px 12px', fontSize: '13px' },
-      stage: { bg: 'accent.default', color: 'accent.ink', height: '38px', paddingInline: '16px', fontSize: '14px' },
+      side: { bg: 'bg.raisedHigh', padding: '5px 12px', fontSize: '13px' },
+      stage: { bg: 'accent.default', color: 'accent.ink', height: 'calc(100% - 14px)', paddingInline: 'clamp(16px, 2.6cqw, 26px)', fontSize: 'clamp(14px, 1.6cqw, 16px)', borderRadius: '8px' },
     },
   },
 });
@@ -188,7 +213,8 @@ export const PasteBoxNote = styled('p', {
   variants: {
     size: {
       bar: { position: 'absolute', top: 'calc(100% + 6px)', left: '14px', zIndex: '5', bg: 'bg.panel', padding: '4px 10px', borderRadius: '6px', boxShadow: 'floating' },
-      stage: { marginTop: '8px' },
+      side: { position: 'absolute', bottom: 'calc(100% + 6px)', left: '0', zIndex: '5', bg: 'bg.panel', padding: '4px 10px', borderRadius: '6px', boxShadow: 'floating' },
+      stage: { marginTop: '10px', textAlign: 'center' },
     },
     refused: { true: { color: 'late' } },
   },

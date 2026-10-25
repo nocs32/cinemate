@@ -26,7 +26,7 @@ if (import.meta.env.DEV) {
 
 syncDocumentLanguage(store.locale);
 watchLayout(store.ui.layout);
-watchActivity(store.room.lights, store.room.clock);
+watchActivity(store.room.lights, store.room.clock, store.room.driver);
 watchKeys(store.room.controls);
 store.room.open();
 

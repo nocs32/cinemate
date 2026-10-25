@@ -137,7 +137,9 @@ export class RoomFeedStore {
     const { locale, presence } = this.#deps;
     // Someone still in the room shows as they are right now; someone who left, as the line kept them.
     const author = presence.find(item.authorId);
-    const authorName = author?.name ?? item.authorName;
+    // A rename keeps the name they had: "Anna is now Anna K".
+    const isRename = item.kind === 'system' && item.event.type === 'renamed';
+    const authorName = isRename ? item.authorName : (author?.name ?? item.authorName);
     const isWarning = item.kind === 'system' && (item.event.type === 'waiting' || item.event.type === 'failed');
 
     return {

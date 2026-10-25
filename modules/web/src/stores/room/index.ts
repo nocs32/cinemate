@@ -10,6 +10,7 @@ import { RoomJoinStore } from './join';
 import { RoomLightsStore } from './lights';
 import { RoomPasteStore } from './paste';
 import { RoomPresenceStore } from './presence';
+import { RoomProfileStore } from './profile';
 import { RoomQueueStore } from './queue';
 import { RoomReactionsStore } from './reactions';
 import { RoomScreenStore } from './screen';
@@ -45,8 +46,10 @@ export class RoomStore {
   readonly controls: RoomScreenControlsStore;
   readonly lights: RoomLightsStore;
   readonly join: RoomJoinStore;
+  readonly profile: RoomProfileStore;
   readonly paste: RoomPasteStore;
   readonly screenPaste: RoomPasteStore;
+  readonly queuePaste: RoomPasteStore;
   readonly feed: RoomFeedStore;
   readonly chatPace: RoomChatPaceStore;
   readonly reactions: RoomReactionsStore;
@@ -68,8 +71,10 @@ export class RoomStore {
     this.controls = new RoomScreenControlsStore({ ...services, t, screen: this.screen, driver: this.driver, send });
     this.lights = new RoomLightsStore({ schedule: services.schedule, isPlaying: () => this.screen.playback.phase === 'playing' });
     this.join = new RoomJoinStore({ ...services, t, presence: this.presence, send, nowShowing: () => this.screen.title || null });
+    this.profile = new RoomProfileStore({ ...services, t, presence: this.presence, send });
     this.paste = new RoomPasteStore({ t, schedule: services.schedule, add });
     this.screenPaste = new RoomPasteStore({ t, schedule: services.schedule, add });
+    this.queuePaste = new RoomPasteStore({ t, schedule: services.schedule, add });
     this.chatPace = new RoomChatPaceStore({ t, now: services.now, schedule: services.schedule });
     this.feed = new RoomFeedStore({ presence: this.presence, locale, send: (text) => send('chat', { text }), takeTurn: () => this.chatPace.take(), isOpen: () => this.side.isChatOpen });
     this.reactions = new RoomReactionsStore({ ...services, t, send: (emoji) => send('react', { emoji }) });
@@ -100,7 +105,10 @@ export class RoomStore {
   receiveSnapshot(snapshot: CinemaSnapshot): void {
     this.clock.start();
     this.presence.receive(snapshot.members, this.connection.meId);
-    this.queue.receive(snapshot.queue, snapshot.history);
+    this.join.receive();
+    const { phase, item } = snapshot.playback;
+
+    this.queue.receive(snapshot.queue, snapshot.history, phase === 'loading' || phase === 'playing' || phase === 'paused' ? item : null);
     this.screen.receive(snapshot.playback);
     this.feed.receive(snapshot.feed);
   }

@@ -76,8 +76,12 @@ class ScreenPlayerHost implements ScreenPlayer {
     this.#player?.setQuality(index);
   }
 
-  needsClick(): boolean {
-    return this.#player?.needsClick() ?? false;
+  soundBlocked(): boolean {
+    return this.#player?.soundBlocked() ?? false;
+  }
+
+  allowSound(): void {
+    this.#player?.allowSound();
   }
 
   destroy(): void {

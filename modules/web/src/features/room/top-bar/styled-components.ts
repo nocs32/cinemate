@@ -20,8 +20,8 @@ export const RoomTopBarRoot = styled('header', {
   },
 });
 
-export const RoomTopBarBrand = styled('div', {
-  base: { display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'display', fontWeight: '700', fontSize: '19px', letterSpacing: '-0.01em', '& svg': { width: '28px', height: '28px', flex: 'none' } },
+export const RoomTopBarBrand = styled('a', {
+  base: { justifySelf: 'start', color: 'inherit', textDecoration: 'none', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'display', fontWeight: '700', fontSize: '19px', letterSpacing: '-0.01em', '& svg': { width: '28px', height: '28px', flex: 'none' } },
 });
 
 export const RoomTopBarRight = styled('div', {

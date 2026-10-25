@@ -70,10 +70,7 @@ export const enRoom = {
       nowHint: 'Starts it now for everyone',
     },
     catchingUp: 'You’re catching up: the room went on without you.',
-    unblock: {
-      text: 'Your browser stopped the video from starting with sound.',
-      button: 'Start my player',
-    },
+    soundOff: 'Sound is off until you click: your browser’s rule. Click anywhere to turn it on.',
   },
   controls: {
     play: 'Play for everyone',
@@ -117,6 +114,15 @@ export const enRoom = {
     note: 'Drag to change the order. The next one starts 5 seconds after this video ends.',
     empty: 'The queue is empty. Anything you paste goes here.',
     remove: 'Remove from the queue',
+    paste: 'Paste a YouTube or video link',
+    now: 'Now',
+    removeNow: {
+      title: 'Remove the video playing now?',
+      next: 'It stops for everyone, and {{title}} starts next.',
+      last: 'It stops for everyone. Nothing else is in the queue.',
+      confirm: 'Remove and skip',
+      cancel: 'Keep it',
+    },
   },
   played: {
     note: 'Played tonight. Click one to put it back in the queue.',

@@ -1,5 +1,6 @@
 import type { MediaErrorCode, MediaSource, PlayerState } from '@cinemate/protocol';
 import type { QualityChoice, ScreenPlayer, ScreenPlayerListeners } from '../types';
+import { canPlaySound, isSilent } from './sound';
 
 // YouTube's player states (YT.PlayerState), spelled out so this file needs YT only at run time.
 const ended = 0;
@@ -32,6 +33,8 @@ export class YouTubeScreenPlayer implements ScreenPlayer {
   #priming: number | null = null;
   // Whether the person had muted YouTube themselves before getting ready muted.
   #wasMuted = false;
+  // Muted because nobody has clicked on the page yet: a click turns the sound on.
+  #soundBlocked = false;
   #intent: 'playing' | 'paused' = 'paused';
   #lastTime = 0;
   #lastAt = 0;
@@ -59,6 +62,9 @@ export class YouTubeScreenPlayer implements ScreenPlayer {
 
   play(): void {
     this.#intent = 'playing';
+
+    if (isSilent()) this.#player?.mute();
+
     this.#player?.playVideo();
   }
 
@@ -111,8 +117,16 @@ export class YouTubeScreenPlayer implements ScreenPlayer {
 
   setQuality(): void {}
 
-  needsClick(): boolean {
-    return false;
+  soundBlocked(): boolean {
+    return this.#soundBlocked;
+  }
+
+  allowSound(): void {
+    if (!this.#soundBlocked) return;
+
+    this.#soundBlocked = false;
+    this.#player?.unMute();
+    this.#listeners.changed();
   }
 
   destroy(): void {
@@ -173,13 +187,20 @@ export class YouTubeScreenPlayer implements ScreenPlayer {
     player.pauseVideo();
     player.seekTo(position, true);
 
-    if (!this.#wasMuted) player.unMute();
-
+    this.#restoreSound(player);
     this.#priming = null;
     this.#lastTime = position;
     this.#ownSeekAt = performance.now();
     this.#listeners.described(player.getDuration(), (player as unknown as { getVideoData?: () => VideoData }).getVideoData?.().title ?? null);
     this.#listeners.changed();
+  }
+
+  // Sound back on after getting ready muted, unless they'd muted it, or the page may not play sound yet.
+  #restoreSound(player: YT.Player): void {
+    if (this.#wasMuted || isSilent()) return;
+
+    if (canPlaySound()) player.unMute();
+    else this.#soundBlocked = true;
   }
 
   #startPoll(): () => void {

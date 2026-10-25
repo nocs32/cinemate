@@ -1,6 +1,7 @@
 import type { MediaErrorCode, MediaSource, PlayerState } from '@cinemate/protocol';
 import type Hls from 'hls.js';
 import type { QualityChoice, ScreenPlayer, ScreenPlayerListeners, VolumePreference } from '../types';
+import { canPlaySound, isSilent } from './sound';
 
 // The video element's "enough data to keep playing".
 const haveFutureData = 3;
@@ -11,7 +12,8 @@ const errorOf = (video: HTMLVideoElement): MediaErrorCode => (video.error?.code 
 
 // The screen's player for video files and HLS streams: the browser's own video element, with
 // hls.js where the browser can't play HLS itself. Our own control bar drives it, so it has no
-// buttons of its own and never reports user actions.
+// buttons of its own and never reports user actions. Before anyone has clicked on the page, it plays
+// muted (browsers allow that) and says the sound is waiting for a click.
 export class VideoScreenPlayer implements ScreenPlayer {
   itemId: string | null = null;
   readonly #listeners: ScreenPlayerListeners;
@@ -20,7 +22,8 @@ export class VideoScreenPlayer implements ScreenPlayer {
   #ready = false;
   #target = 0;
   #intent: 'playing' | 'paused' = 'paused';
-  #blocked = false;
+  #volume: VolumePreference = { volume: 100, muted: false };
+  #soundBlocked = false;
   readonly #onEvent = (): void => this.#changed();
   readonly #onError = (): void => this.#listeners.failed(errorOf(this.#video));
 
@@ -48,10 +51,9 @@ export class VideoScreenPlayer implements ScreenPlayer {
   play(): void {
     this.#intent = 'playing';
 
-    this.#video.play().then(
-      () => this.#unblock(),
-      (error: unknown) => this.#block(error),
-    );
+    if (!canPlaySound() && !this.#volume.muted) this.#blockSound();
+
+    this.#video.play().catch((error: unknown) => this.#retryMuted(error));
   }
 
   pause(): void {
@@ -87,9 +89,9 @@ export class VideoScreenPlayer implements ScreenPlayer {
     return video.paused ? 'paused' : 'playing';
   }
 
-  setVolume({ volume, muted }: VolumePreference): void {
-    this.#video.volume = volume / 100;
-    this.#video.muted = muted;
+  setVolume(volume: VolumePreference): void {
+    this.#volume = volume;
+    this.#applyVolume();
   }
 
   quality(): QualityChoice | null {
@@ -108,8 +110,17 @@ export class VideoScreenPlayer implements ScreenPlayer {
     if (this.#hls) this.#hls.currentLevel = index;
   }
 
-  needsClick(): boolean {
-    return this.#blocked;
+  soundBlocked(): boolean {
+    return this.#soundBlocked;
+  }
+
+  // A click on the page: sound is allowed now.
+  allowSound(): void {
+    if (!this.#soundBlocked) return;
+
+    this.#soundBlocked = false;
+    this.#applyVolume();
+    this.#listeners.changed();
   }
 
   destroy(): void {
@@ -162,14 +173,22 @@ export class VideoScreenPlayer implements ScreenPlayer {
     this.#listeners.described(Number.isFinite(this.#video.duration) ? this.#video.duration : 0, null);
   }
 
-  #block(error: unknown): void {
-    if (error instanceof DOMException && error.name === 'NotAllowedError') this.#blocked = true;
+  #applyVolume(): void {
+    this.#video.volume = this.#volume.volume / 100;
+    this.#video.muted = this.#volume.muted || this.#soundBlocked || isSilent();
+  }
 
+  #blockSound(): void {
+    this.#soundBlocked = true;
+    this.#applyVolume();
     this.#listeners.changed();
   }
 
-  #unblock(): void {
-    this.#blocked = false;
-    this.#listeners.changed();
+  // The browser still said no to sound: play muted instead.
+  #retryMuted(error: unknown): void {
+    if (!(error instanceof DOMException) || error.name !== 'NotAllowedError' || this.#video.muted) return;
+
+    this.#blockSound();
+    void this.#video.play().catch(() => undefined);
   }
 }

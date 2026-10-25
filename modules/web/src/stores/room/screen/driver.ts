@@ -61,11 +61,11 @@ export class RoomScreenDriverStore {
     return this.player !== null;
   }
 
-  // The browser stopped the player from starting by itself: one click on the page fixes it.
-  get needsClick(): boolean {
+  // Playing muted because nobody has clicked on the page yet: any click turns the sound on.
+  get isSoundBlocked(): boolean {
     void this.version;
 
-    return this.player?.needsClick() ?? false;
+    return this.player?.soundBlocked() ?? false;
   }
 
   // The screen is on the page: a player goes into its element. The element stays the player's.
@@ -123,9 +123,9 @@ export class RoomScreenDriverStore {
     this.#deps.send('status', { itemId: player.itemId, state: player.state(), position: Math.max(0, player.time()), sampledAt: this.#deps.clock.serverNow() });
   }
 
-  // Unblocks a player the browser stopped from starting by itself (one click on the page).
-  unblock(): void {
-    this.player?.play();
+  // Someone clicked or typed on the page: the browser allows sound now.
+  allowSound(): void {
+    this.player?.allowSound();
   }
 
   apply(): void {

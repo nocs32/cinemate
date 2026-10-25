@@ -11,6 +11,7 @@ import {
   RoomSideTicketThumb,
   RoomSideTicketTitle,
 } from './styled-components';
+import { RoomSideTicketRemoveNow } from './ticket-remove-now';
 
 interface RoomSideTicketProps {
   ticket: TicketView;
@@ -25,12 +26,13 @@ interface RoomSideTicketProps {
   onDragEnd?: () => void;
 }
 
-// A video as a ticket (spec §6): its place in line by the tear-off notches, its thumbnail, title,
-// length and who added it.
+// A video as a ticket (spec §6): its place in line by the tear-off notches ("Now" for the one on
+// screen), its thumbnail, title, length and who added it.
 export function RoomSideTicket({ ticket, draggable, played = false, compact, actionLabel, onAction, onDragStart, onDrop, onDragEnd }: RoomSideTicketProps): ReactElement {
   return (
     <RoomSideTicketRoot
       next={ticket.isNext}
+      now={ticket.isNow}
       dragged={ticket.isDragged}
       played={played}
       compact={compact}
@@ -49,9 +51,13 @@ export function RoomSideTicket({ ticket, draggable, played = false, compact, act
           <RoomSideTicketBy tone={ticket.addedByColor}>{ticket.addedByName}</RoomSideTicketBy>
         </RoomSideTicketMeta>
       </RoomSideTicketInfo>
-      <RoomSideTicketAction type="button" onClick={onAction} aria-label={actionLabel} title={actionLabel} cover={played}>
-        {played ? <RotateCcwIcon /> : <CloseIcon />}
-      </RoomSideTicketAction>
+      {ticket.isNow ? (
+        <RoomSideTicketRemoveNow />
+      ) : (
+        <RoomSideTicketAction type="button" onClick={onAction} aria-label={actionLabel} title={actionLabel} cover={played}>
+          {played ? <RotateCcwIcon /> : <CloseIcon />}
+        </RoomSideTicketAction>
+      )}
     </RoomSideTicketRoot>
   );
 }
