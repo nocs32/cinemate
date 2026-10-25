@@ -12,7 +12,7 @@ Watch videos together with friends in the browser, in sync and at full quality.
 - **Only for you:** volume, quality, subtitles and fullscreen stay personal.
 - **Chat and reactions,** in English or Ukrainian, on a computer or a phone. A room disappears about 10 minutes after the last person leaves.
 
-> **Status:** setup (M0). The rules for keeping a room in sync are built and tested in the engine; the web UI comes next.
+> **Status:** the web UI (M1) is built against the demo room: the start page, the join card, the screen with YouTube and file players, the waiting slate and "Go on without", the film-leader countdown, "Up next", the queue, the chat, reactions, phones, and English and Ukrainian. The server (M2) comes next; until then `pnpm dev` also opens the demo room.
 
 ## Stack
 
@@ -39,7 +39,7 @@ pnpm dev
 | Web | http://localhost:5179 |
 | API | http://localhost:2573 (the web dev server forwards `/api/*`, and `/live` for rooms, to it) |
 
-`pnpm demo` runs the web app alone against a demo room in the browser, with no API.
+`pnpm demo` runs the web app alone against a demo room in the browser, with no API: three sample viewers come in and fill the queue with Blender's open movies, and a fourth joins later. The **Demo** menu in the top bar makes Dima buffer, gives Oleh an ad (long enough to try "Go on without Oleh"), makes Marta fall behind, or adds and removes a viewer.
 
 The ports sit one above Deeds' (5178 and 2572) and the table games', so every project can run at the same time.
 

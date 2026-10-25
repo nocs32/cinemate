@@ -95,10 +95,29 @@ export class Cinema {
     return item;
   }
 
-  remove(byId: string, itemId: string): void {
+  // Out of the queue. The video on screen too: then the next one starts for everyone (playing if
+  // the room was), and the removed one doesn't go into tonight's history.
+  remove(byId: string, itemId: string, now: number): void {
+    const current = this.playback.item;
+
+    if (current?.id === itemId && playback.isOnScreen(this.playback)) {
+      const { isPlaying } = this;
+
+      this.#notice(byId, { type: 'removed', title: current.title ?? '' });
+      this.#startNext(now, isPlaying);
+
+      return;
+    }
+
     const item = this.queue.remove(itemId);
 
     this.#notice(byId, { type: 'removed', title: item.title ?? '' });
+  }
+
+  get isPlaying(): boolean {
+    const { phase, resume } = this.playback;
+
+    return phase === 'playing' || (phase === 'loading' && resume);
   }
 
   move(itemId: string, toIndex: number): void {
@@ -226,7 +245,8 @@ export class Cinema {
   #queued(byId: string, item: QueueItem, now: number): void {
     this.#notice(byId, { type: 'added', title: item.title ?? '' });
 
-    if (this.playback.phase === 'empty' || this.playback.phase === 'ended') this.#startNext(now);
+    // A link pasted into a room with nothing on loads paused: someone presses play for everyone.
+    if (this.playback.phase === 'empty' || this.playback.phase === 'ended') this.#startNext(now, false);
   }
 
   #needScreen(): QueueItem {
@@ -300,10 +320,12 @@ export class Cinema {
     this.playback = this.queue.next ? playback.upNext(this.playback, now) : playback.ended(this.playback);
   }
 
-  #startNext(now: number): void {
+  // The next video, playing once everyone has it (after "Up next", a skip, or one that failed), or
+  // paused at its start (the first in a room with nothing on).
+  #startNext(now: number, resume = true): void {
     const next = this.queue.takeNext();
 
-    if (next) this.playback = playback.load(this.playback, next, next.source.start, true, 'start', now);
+    if (next) this.playback = playback.load(this.playback, next, next.source.start, resume, 'start', now);
     else this.playback = this.playback.item ? playback.ended(this.playback) : playback.empty();
   }
 

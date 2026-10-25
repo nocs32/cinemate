@@ -1,4 +1,4 @@
-import type { MediaSource, PlayerState, QueueAuthor } from '@cinemate/protocol';
+import { syncLimits, type MediaSource, type PlayerState, type QueueAuthor } from '@cinemate/protocol';
 import { Cinema } from './index.js';
 
 // A cinema on a hand-moved clock, with helpers that report for a viewer like their browser would.
@@ -11,6 +11,16 @@ export interface TestCinema {
   // Everyone listed reports ready where the room waits.
   ready: (...ids: string[]) => void;
 }
+
+// A video playing for everyone, a little past the start's grace: added (it loads paused), played,
+// and everyone ready both times.
+export const startTogether = (room: TestCinema, people: readonly string[]): void => {
+  room.cinema.add(author(people[0] ?? 'a'), film(), 'Big Buck Bunny', room.now());
+  room.ready(...people);
+  room.cinema.play(people[0] ?? 'a', room.now());
+  room.ready(...people);
+  room.advance(syncLimits.quickStartMs + syncLimits.startupGraceMs);
+};
 
 export const author = (id: string): QueueAuthor => ({ id, name: id.toUpperCase(), color: 'teal' });
 
