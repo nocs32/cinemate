@@ -24,6 +24,7 @@ const toMember = (member: CinemaRoomMember, cinema: Cinema, now: number): Member
     status: state?.status ?? 'joining',
     offsetMs: state?.offsetMs ?? null,
     slowpokes: state?.slowpokes ?? 0,
+    watchFps: state?.watchFps ?? null,
   };
 };
 

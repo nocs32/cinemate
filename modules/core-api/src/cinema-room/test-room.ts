@@ -4,6 +4,7 @@ import { ColyseusTestServer } from '@colyseus/testing';
 import { WebSocketTransport } from '@colyseus/ws-transport';
 import { cinemaProtocolVersion, cinemaRoomName, type CinemaEvents, type CinemaIntents, type CinemaIntentType, type CinemaJoinOptions, type PlayerState } from '@cinemate/protocol';
 import { afterAll, afterEach, beforeAll } from 'vitest';
+import { MediaShares } from '../media/index.js';
 import { CinemaRoom } from './index.js';
 
 // A real room on a real server, for the room tests: on its own port, away from the dev servers
@@ -26,13 +27,13 @@ export interface TestRoom {
   colyseus: () => ColyseusTestServer;
 }
 
-export const useTestRoom = (port: number, titles: Record<string, string> = {}): TestRoom => {
+export const useTestRoom = (port: number, titles: Record<string, string> = {}, shares = new MediaShares()): TestRoom => {
   let colyseus: ColyseusTestServer | null = null;
 
   beforeAll(async () => {
     const server = new Server({ transport: new WebSocketTransport(), greet: false });
 
-    server.define(cinemaRoomName, CinemaRoom, { lookupTitle: (id: string) => Promise.resolve(titles[id] ?? null) });
+    server.define(cinemaRoomName, CinemaRoom, { shares, lookupTitle: (id: string) => Promise.resolve(titles[id] ?? null) });
     await server.listen(port);
     colyseus = new ColyseusTestServer(server);
   });

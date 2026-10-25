@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "pnpm --parallel --recursive run dev",
     "demo": "pnpm --filter @cinemate/web dev --mode demo",
+    "relay": "docker compose -f relay/compose.yaml up",
     "lint": "eslint .",
     "typecheck": "pnpm --recursive run typecheck",
     "test": "pnpm --recursive run test",

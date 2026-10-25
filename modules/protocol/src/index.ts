@@ -4,6 +4,7 @@ export * from './cinema-errors.js';
 export * from './cinema-events.js';
 export * from './cinema-messages.js';
 export * from './health.js';
+export * from './live.js';
 export * from './media.js';
 export * from './people.js';
 export * from './sync.js';

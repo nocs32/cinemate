@@ -100,6 +100,9 @@ export const ended = (state: PlaybackState): PlaybackState => ({ ...state, ...se
 
 export const empty = (): PlaybackState => emptyPlayback;
 
+// Someone started sharing (D30): the video stops where it is, and "Up next" holds until someone lets go.
+export const holdForShare = (state: PlaybackState, now: number): PlaybackState => (state.phase === 'upNext' ? { ...state, upNextHeld: true } : pause(state, now));
+
 export const holdUpNext = (state: PlaybackState, held: boolean, now: number): PlaybackState => {
   if (state.phase !== 'upNext') return state;
 

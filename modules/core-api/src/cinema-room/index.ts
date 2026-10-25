@@ -20,7 +20,9 @@ import { logger } from '../logger.js';
 import { CinemaRoomError } from './error.js';
 import { CinemaRoomFeed } from './feed.js';
 import { cinemaRoomHandlers, type CinemaRoomHandlers } from './intents.js';
+import { MediaShares } from '../media/index.js';
 import { CinemaRoomLifecycle, type Schedule } from './lifecycle.js';
+import { CinemaRoomMedia } from './media.js';
 import { CinemaRoomMembers } from './members.js';
 import { CinemaRoomOutbox } from './outbox.js';
 import { CinemaRoomRateLimits } from './rate-limits.js';
@@ -29,8 +31,10 @@ import { cinemaView } from './view.js';
 
 export type CinemaClient = Client<{ messages: CinemaEvents }>;
 
-// What `server.define` may hand the room: tests swap YouTube's titles for their own.
+// What `server.define` may hand the room: the server's list of live shares, and (in tests) YouTube's
+// titles swapped for their own.
 export interface CinemaRoomOptions {
+  shares?: MediaShares;
   lookupTitle?: TitleLookup;
 }
 
@@ -40,7 +44,7 @@ const { room } = limits;
 const quietIntents: ReadonlySet<CinemaIntentType> = new Set(['sync', 'ping', 'react']);
 
 // Refusals that happen in normal use: a fast hand, a move that crossed someone else's.
-const expectedRefusals: ReadonlySet<CinemaErrorCode> = new Set(['RATE_LIMITED', 'NOTHING_PLAYING', 'NO_SUCH_ITEM', 'TOO_SOON', 'COLOR_TAKEN', 'NOT_A_LINK', 'NOT_HTTPS', 'UNSUPPORTED_LINK']);
+const expectedRefusals: ReadonlySet<CinemaErrorCode> = new Set(['RATE_LIMITED', 'NOTHING_PLAYING', 'NO_SUCH_ITEM', 'TOO_SOON', 'SHARE_TAKEN', 'SHARE_ON', 'COLOR_TAKEN', 'NOT_A_LINK', 'NOT_HTTPS', 'UNSUPPORTED_LINK']);
 
 // 12 characters of [0-9a-z]: about 62 bits, so room links can't be guessed.
 const createRoomId = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 12);
@@ -87,11 +91,16 @@ export class CinemaRoom extends Room<{ client: CinemaClient }> {
 
   readonly #lifecycle = new CinemaRoomLifecycle({ schedule: this.#schedule, graceMs: room.emptyGraceMs, close: () => void this.disconnect() });
   #lookupTitle: TitleLookup = fetchYoutubeTitle;
+  // A room on its own (tests) keeps its own list; the server hands every room the shared one.
+  #shares = new MediaShares();
+  readonly #media = new CinemaRoomMedia({ shares: () => this.#shares, roomId: () => this.roomId });
 
   override onCreate(options: CinemaRoomOptions): void {
     this.roomId = createRoomId();
 
     if (typeof options.lookupTitle === 'function') this.#lookupTitle = options.lookupTitle;
+
+    if (options.shares instanceof MediaShares) this.#shares = options.shares;
 
     this.#listen();
     this.#lifecycle.open();
@@ -141,6 +150,7 @@ export class CinemaRoom extends Room<{ client: CinemaClient }> {
   }
 
   override onDispose(): void {
+    this.#media.dispose();
     this.#lifecycle.dispose();
     this.#rateLimits.dispose();
     this.#outbox.dispose();
@@ -163,6 +173,7 @@ export class CinemaRoom extends Room<{ client: CinemaClient }> {
       add: (id, url) => this.#add(id, url),
       replay: (id, itemId) => this.#cinema.replay(this.#author(id), itemId, now()),
       failed: (id, itemId, code) => this.#cinema.failed(id, itemId, code, now()),
+      startShare: (id) => this.#startShare(id),
     });
   }
 
@@ -219,6 +230,15 @@ export class CinemaRoom extends Room<{ client: CinemaClient }> {
     this.#changed();
   }
 
+  // Live share (spec §14): the cinema says whether they may, the relay gets the new path with a fresh
+  // key, and only the sharer's browser is told the key.
+  #startShare(id: string): void {
+    const share = this.#cinema.startShare(id, randomUUID(), Date.now());
+
+    this.clients.getById(id)?.send('shareKey', { path: share.path, key: this.#media.open(share) });
+    logger.info('share started', { roomId: this.roomId, sessionId: id });
+  }
+
   #author(id: string): { id: string; name: string; color: ViewerColor } {
     const { name, color } = this.#members.get(id);
 
@@ -232,6 +252,7 @@ export class CinemaRoom extends Room<{ client: CinemaClient }> {
 
   // After every change: what the cinema noticed becomes feed lines, and everyone is sent what changed.
   #changed(): void {
+    this.#media.sync(this.#cinema.share);
     this.#cinema.drainNotices().forEach((notice) => this.#line(notice));
     this.#outbox.flush();
   }

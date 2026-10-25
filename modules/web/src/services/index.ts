@@ -1,6 +1,7 @@
 import { createAddress } from './address';
 import { createDemoRoom } from './demo-room';
 import { createFullscreen } from './fullscreen';
+import { createDemoLiveMedia, createLiveMedia } from './live-media';
 import { createLiveRoom } from './live-room';
 import { createPlayerFactory } from './players';
 import { createPreferences } from './preferences';
@@ -20,6 +21,11 @@ export type {
   DemoAction,
   DemoControls,
   FullscreenService,
+  LiveCaptureResult,
+  LiveMediaService,
+  LiveScreen,
+  LiveScreenListeners,
+  LiveShare,
   PlayerUserAction,
   PreferencesService,
   QualityChoice,
@@ -59,6 +65,7 @@ export const createServices = (): Services => ({
   // engine's cinema and sample viewers in the browser, with no server.
   cinemaClient: isDemo ? createDemoRoom({ schedule, repeat, random: Math.random, now: Date.now, createId }) : createLiveRoom(window.location.origin, Date.now),
   createPlayer: createPlayerFactory(),
+  liveMedia: isDemo ? createDemoLiveMedia(schedule) : createLiveMedia(window.location.origin, schedule),
   fullscreen: createFullscreen(),
   schedule,
   repeat,

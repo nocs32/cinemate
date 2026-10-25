@@ -5,6 +5,7 @@ import { RoomTheatreScreenCatchingUp } from './catching-up';
 import { RoomTheatreScreenEmpty } from './empty';
 import { RoomTheatreScreenFlights } from './flights';
 import { RoomTheatreScreenLeader } from './leader';
+import { RoomTheatreScreenLive } from './live';
 import { RoomTheatreScreenPlay } from './play';
 import { RoomTheatreScreenSlate } from './slate';
 import { RoomTheatreScreenSound } from './sound';
@@ -18,23 +19,24 @@ import { useRoomTheatreScreenPlayer } from './use-player';
 // next", the big play button while paused, reactions.
 export const RoomTheatreScreen = observer(function RoomTheatreScreen(): ReactElement {
   const { locale, room } = useRootStore();
-  const { screen, driver, controls, lights } = room;
+  const { screen, driver, controls, lights, live } = room;
   const playerRef = useRoomTheatreScreenPlayer(driver);
   const frameRef = useRoomTheatreScreenFrame(controls);
   const { overlay } = screen;
 
   return (
     <RoomTheatreScreenWrap>
-      {screen.thumbnail && screen.hasVideo && <RoomTheatreScreenSpill src={screen.thumbnail} alt="" bright={lights.isDown} />}
+      {screen.thumbnail && screen.hasVideo && !screen.isLive && <RoomTheatreScreenSpill src={screen.thumbnail} alt="" bright={lights.isDown} />}
       <RoomTheatreScreenFrame ref={frameRef} aria-label={locale.t('screen.label')} bare={overlay === 'empty' || overlay === 'ended'}>
-        <RoomTheatreScreenPlayer ref={playerRef} hidden={!screen.hasVideo} />
+        <RoomTheatreScreenPlayer ref={playerRef} hidden={!screen.hasVideo || screen.isLive} />
+        <RoomTheatreScreenLive />
         {(overlay === 'empty' || overlay === 'ended') && <RoomTheatreScreenEmpty />}
         {overlay === 'upNext' && <RoomTheatreScreenUpNext />}
         {overlay === 'waiting' && <RoomTheatreScreenSlate />}
         {overlay === 'leader' && <RoomTheatreScreenLeader />}
         {overlay === 'paused' && <RoomTheatreScreenPlay />}
         {overlay === 'none' && screen.isCatchingUp && <RoomTheatreScreenCatchingUp />}
-        {driver.isSoundBlocked && <RoomTheatreScreenSound />}
+        {(screen.isLive ? live.isSoundBlocked : driver.isSoundBlocked) && <RoomTheatreScreenSound />}
         <RoomTheatreScreenFlights />
       </RoomTheatreScreenFrame>
     </RoomTheatreScreenWrap>

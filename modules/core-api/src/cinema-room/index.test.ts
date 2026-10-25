@@ -1,8 +1,10 @@
 import { syncLimits, viewerColors } from '@cinemate/protocol';
 import { expect, test } from 'vitest';
+import { MediaShares } from '../media/index.js';
 import { all, latest, phaseOf, report, send, sitDown, until, useTestRoom, type Seat } from './test-room.js';
 
-const room = useTestRoom(2596, { 'aqz-KE-bpKQ': 'Big Buck Bunny' });
+const shares = new MediaShares();
+const room = useTestRoom(2596, { 'aqz-KE-bpKQ': 'Big Buck Bunny' }, shares);
 
 const film = 'https://example.com/films/sintel.mp4';
 
@@ -111,4 +113,28 @@ test('someone still on the join card is never waited for, and enters with their 
 
   send(taras, 'enter', { name: 'Taras', color: free });
   await until(() => latest(anna, 'view')?.members.find((member) => member.name === 'Taras')?.entered === true);
+});
+
+test('one person shares at a time; only their key publishes, and stopping closes the relay path', async () => {
+  const seats = await sitDown(room, ['Anna', 'Dima']);
+  const [anna, dima] = seats as [Seat, Seat];
+
+  send(anna, 'startShare', {});
+  await until(() => latest(anna, 'shareKey') !== undefined && latest(dima, 'view')?.share !== null);
+
+  const { path, key } = latest(anna, 'shareKey') ?? { path: '', key: '' };
+
+  expect(latest(dima, 'view')?.share).toMatchObject({ sharerId: anna.room.sessionId, path });
+  expect(latest(dima, 'shareKey')).toBeUndefined();
+  expect(shares.allows({ action: 'publish', path, token: key })).toBe(true);
+  expect(shares.allows({ action: 'publish', path, token: 'guess' })).toBe(false);
+  expect(shares.allows({ action: 'read', path, token: '' })).toBe(true);
+
+  send(dima, 'startShare', {});
+  await until(() => latest(dima, 'error')?.code === 'SHARE_TAKEN');
+
+  send(anna, 'stopShare', {});
+  await until(() => latest(dima, 'view')?.share === null);
+
+  expect(shares.allows({ action: 'read', path, token: '' })).toBe(false);
 });

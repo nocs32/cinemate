@@ -1,0 +1,29 @@
+# The live-share relay for `pnpm dev` (spec §14): MediaMTX in Docker (`pnpm relay`). It takes a share
+# over WHIP and hands it to every watcher over WHEP, without re-encoding, and asks core-api on this
+# machine before every publish and every watch. On the Pi, tables-host runs the same with its own
+# addresses.
+logLevel: info
+
+rtsp: false
+rtmp: false
+hls: false
+srt: false
+moq: false
+
+webrtc: true
+webrtcAddress: :8889
+webrtcAllowOrigins: ['*']
+# The video itself: UDP 8189, with TCP 8189 as the fallback, published by Docker on this machine.
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: :8189
+# Inside Docker the container's own addresses are unreachable; browsers here reach it on 127.0.0.1.
+webrtcIPsFromInterfaces: false
+webrtcAdditionalHosts: [127.0.0.1]
+
+# core-api answers 200 (yes) or 401 (no) for every publish and watch (spec §14.3).
+authMethod: http
+authHTTPAddress: http://host.docker.internal:2573/relay/auth
+
+# Only the shares rooms open: live/ and a share id.
+paths:
+  '~^live/[0-9a-f-]{36}$': {}

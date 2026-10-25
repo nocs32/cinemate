@@ -47,4 +47,9 @@ export const keyframes = defineKeyframes({
   spin: {
     to: { transform: 'rotate(360deg)' },
   },
+  // The live tag's red dot.
+  pulse: {
+    '0%, 100%': { opacity: '1' },
+    '50%': { opacity: '0.35' },
+  },
 });

@@ -17,6 +17,8 @@ export interface MemberSnapshot {
   offsetMs: number | null;
   // How many times they've kept the room waiting tonight (D11).
   slowpokes: number;
+  // While someone shares: the frames a second this person's screen shows (D31), null until known.
+  watchFps: number | null;
 }
 
 // empty: nothing to play. loading: everyone gets the video ready at `position` (then plays if
@@ -59,7 +61,9 @@ export type FeedEvent =
   | { type: 'skipped'; title: string }
   | { type: 'waiting'; status: ViewerStatus }
   | { type: 'wentOnWithout'; names: string[] }
-  | { type: 'failed'; title: string; code: MediaErrorCode };
+  | { type: 'failed'; title: string; code: MediaErrorCode }
+  | { type: 'shareStarted' }
+  | { type: 'shareStopped' };
 
 interface FeedItemBase {
   id: string;

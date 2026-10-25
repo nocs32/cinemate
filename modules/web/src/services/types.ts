@@ -1,4 +1,4 @@
-import type { CinemaErrorEvent, CinemaIntents, CinemaIntentType, CinemaPongEvent, CinemaReactionEvent, CinemaSnapshot, MediaErrorCode, MediaSource, PlayerState, ViewerColor } from '@cinemate/protocol';
+import type { CinemaErrorEvent, CinemaIntents, CinemaIntentType, CinemaPongEvent, CinemaReactionEvent, CinemaShareKeyEvent, CinemaSnapshot, LiveQuality, MediaErrorCode, MediaSource, PlayerState, ViewerColor } from '@cinemate/protocol';
 import type { Language, TranslationKey, TranslationValues } from '../i18n';
 
 export interface VolumePreference {
@@ -45,6 +45,8 @@ export interface CinemaLinkListeners {
   pong: (event: CinemaPongEvent) => void;
   // Someone else's reaction.
   reaction: (event: CinemaReactionEvent) => void;
+  // The room said yes to this browser's share: the relay's path and the key to publish with.
+  shareKey: (event: CinemaShareKeyEvent) => void;
   // The connection dropped (the room holds the seat for a while), or came back.
   connection: (state: CinemaConnectionState) => void;
   // The seat is gone for good: the room closed, or getting back in took too long.
@@ -139,6 +141,49 @@ export interface ScreenPlayer {
 // Makes the screen's player inside the element the screen gives it.
 export type ScreenPlayerFactory = (element: HTMLElement, listeners: ScreenPlayerListeners) => ScreenPlayer;
 
+// Live share (spec §14): a picked tab or screen, sent to the relay once the room says yes.
+export interface LiveShare {
+  readonly stream: MediaStream;
+  readonly hasSound: boolean;
+  publish: (url: string, key: string) => Promise<void>;
+  // While it's live too: the picture's size, frame rate and top bitrate (D32).
+  setQuality: (quality: LiveQuality) => Promise<void>;
+  setSound: (on: boolean) => void;
+  // Stops sending and ends the capture (Chrome's "sharing" bar goes away).
+  stop: () => void;
+}
+
+// `cancelled`: the person closed the picker. `unsupported`: this browser can't share (phones).
+export type LiveCaptureResult = { ok: true; share: LiveShare } | { ok: false; reason: 'cancelled' | 'unsupported' };
+
+export interface LiveScreenListeners {
+  // It started playing, or the sound came on.
+  changed: () => void;
+}
+
+// The video over the screen that shows a live share (a service, like the screen's player).
+export interface LiveScreen {
+  readonly soundBlocked: boolean;
+  // The room's share from the relay.
+  watch: (path: string) => void;
+  // The sharer's own picture, straight from the capture, silent.
+  preview: (share: LiveShare) => void;
+  clear: () => void;
+  setVolume: (volume: VolumePreference) => void;
+  allowSound: () => void;
+  // Frames a second since the last ask, or null before there's a picture.
+  fps: () => Promise<number | null>;
+  destroy: () => void;
+}
+
+export interface LiveMediaService {
+  // Opens the browser's picker; `ended` is called if the person stops sharing from Chrome's own bar.
+  capture: (quality: LiveQuality, ended: () => void) => Promise<LiveCaptureResult>;
+  publish: (share: LiveShare, path: string, key: string) => Promise<void>;
+  // Puts the live screen's video into the element the screen gives it.
+  attach: (element: HTMLElement, listeners: LiveScreenListeners) => LiveScreen;
+}
+
 export interface FullscreenService {
   // The element that goes fullscreen: the screen with everything drawn over it.
   setTarget: (element: HTMLElement | null) => void;
@@ -156,6 +201,7 @@ export interface Services {
   address: AddressService;
   cinemaClient: CinemaClientService;
   createPlayer: ScreenPlayerFactory;
+  liveMedia: LiveMediaService;
   fullscreen: FullscreenService;
   schedule: Schedule;
   repeat: Schedule;

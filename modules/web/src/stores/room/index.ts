@@ -8,6 +8,7 @@ import { RoomConnectionStore } from './connection';
 import { RoomFeedStore } from './feed';
 import { RoomJoinStore } from './join';
 import { RoomLightsStore } from './lights';
+import { RoomLiveStore } from './live';
 import { RoomPasteStore } from './paste';
 import { RoomPresenceStore } from './presence';
 import { RoomProfileStore } from './profile';
@@ -31,6 +32,7 @@ const createConnection = (room: RoomStore, services: Services, t: Translate): Ro
       pong: (event) => room.clock.receivePong(event),
       reaction: (event) => room.receiveReaction(event),
       refused: (event) => room.receiveRefusal(event),
+      shareKey: (event) => room.live.sharer.receiveKey(event),
     },
   });
 
@@ -45,6 +47,7 @@ export class RoomStore {
   readonly driver: RoomScreenDriverStore;
   readonly controls: RoomScreenControlsStore;
   readonly lights: RoomLightsStore;
+  readonly live: RoomLiveStore;
   readonly join: RoomJoinStore;
   readonly profile: RoomProfileStore;
   readonly paste: RoomPasteStore;
@@ -66,10 +69,11 @@ export class RoomStore {
     this.presence = new RoomPresenceStore({ t });
     this.clock = new RoomClockStore({ ...services, send });
     this.queue = new RoomQueueStore({ t, presence: this.presence, send });
-    this.screen = new RoomScreenStore({ ...services, t, clock: this.clock, presence: this.presence, queue: this.queue, send });
+    this.screen = new RoomScreenStore({ ...services, t, clock: this.clock, presence: this.presence, queue: this.queue, send, isLive: () => this.live.isOn });
     this.driver = new RoomScreenDriverStore({ ...services, screen: this.screen, clock: this.clock, send, isWatching: () => this.presence.me?.entered ?? false });
     this.controls = new RoomScreenControlsStore({ ...services, t, screen: this.screen, driver: this.driver, send });
-    this.lights = new RoomLightsStore({ schedule: services.schedule, isPlaying: () => this.screen.playback.phase === 'playing' });
+    this.live = new RoomLiveStore({ ...services, t, presence: this.presence, send, volume: () => this.controls.volume });
+    this.lights = new RoomLightsStore({ schedule: services.schedule, isPlaying: () => this.screen.playback.phase === 'playing' || this.live.isOn });
     this.join = new RoomJoinStore({ ...services, t, presence: this.presence, send, nowShowing: () => this.screen.title || null });
     this.profile = new RoomProfileStore({ ...services, t, presence: this.presence, send });
     this.paste = new RoomPasteStore({ t, schedule: services.schedule, add });
@@ -110,7 +114,14 @@ export class RoomStore {
 
     this.queue.receive(snapshot.queue, snapshot.history, phase === 'loading' || phase === 'playing' || phase === 'paused' ? item : null);
     this.screen.receive(snapshot.playback);
+    this.live.receive(snapshot.share);
     this.feed.receive(snapshot.feed);
+  }
+
+  // Someone clicked or typed on the page: the browser allows sound now, for videos and shares alike.
+  allowSound(): void {
+    this.driver.allowSound();
+    this.live.allowSound();
   }
 
   receiveRefusal(event: CinemaErrorEvent): void {
@@ -119,6 +130,8 @@ export class RoomStore {
     if (event.type === 'add') this.#lastPaste?.refuse(event.code);
 
     if (event.type === 'enter') this.join.refuse();
+
+    if (event.type === 'startShare') this.live.sharer.refuse(event.code);
   }
 
   receiveReaction(event: CinemaReactionEvent): void {
