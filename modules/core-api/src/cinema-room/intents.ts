@@ -17,6 +17,7 @@ export interface CinemaRoomMoves {
   add: (memberId: string, url: string) => void;
   replay: (memberId: string, itemId: string) => void;
   failed: (memberId: string, itemId: string, code: MediaErrorCode) => void;
+  startShare: (memberId: string) => void;
 }
 
 // Each intent and the one call that answers it (core-api rule 3).
@@ -44,5 +45,8 @@ export const cinemaRoomHandlers = (moves: CinemaRoomMoves): CinemaRoomHandlers =
     holdUpNext: (_id, { held }) => cinema.holdUpNext(held, now()),
     status: (id, report) => cinema.report(id, report, now()),
     mediaError: (id, { itemId, code }) => moves.failed(id, itemId, code),
+    startShare: (id) => moves.startShare(id),
+    stopShare: (id) => cinema.stopShare(id),
+    watchStats: (id, { fps }) => cinema.watchStats(id, fps),
   };
 };

@@ -5,7 +5,7 @@ import { playerStates } from './sync.js';
 
 // Bumped whenever an intent or an event changes shape. A web app on another version is turned
 // away with PROTOCOL_MISMATCH and asked to reload.
-export const cinemaProtocolVersion = 1;
+export const cinemaProtocolVersion = 2;
 
 // The Colyseus room type the web app creates and joins.
 export const cinemaRoomName = 'cinema';
@@ -77,6 +77,11 @@ export const cinemaIntentSchemas = {
   status: v.strictObject({ itemId: v.nullable(itemId), state: v.picklist(playerStates), position: seconds, sampledAt: time }),
   // The video can't be played here.
   mediaError: v.strictObject({ itemId, code: v.picklist(mediaErrorCodes) }),
+  // Live share (spec §14): this browser picked a tab or screen and wants to show it; it stopped.
+  startShare: empty,
+  stopShare: empty,
+  // While someone shares: the frames a second this browser's screen shows (D31).
+  watchStats: v.strictObject({ fps: v.pipe(v.number(), v.minValue(0), v.maxValue(240)) }),
 };
 
 export type CinemaIntentType = keyof typeof cinemaIntentSchemas;

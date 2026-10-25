@@ -26,6 +26,12 @@ export const cinemaErrorCodes = [
   'NOTHING_PLAYING',
   // Going on without someone before the room has waited 20 seconds (D10).
   'TOO_SOON',
+  // Someone else is already sharing (D29).
+  'SHARE_TAKEN',
+  // Play, pause, seek and skip wait while someone shares (D30).
+  'SHARE_ON',
+  // Stopping a share that isn't yours.
+  'NOT_SHARING',
 ] as const;
 
 export type CinemaErrorCode = (typeof cinemaErrorCodes)[number];

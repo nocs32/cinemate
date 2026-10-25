@@ -15,11 +15,13 @@ export interface RoomScreenDeps {
   queue: RoomQueueStore;
   send: CinemaSend;
   repeat: Schedule;
+  // Someone is sharing live (spec §14): the live screen covers the player, and nothing is drawn over it.
+  isLive: () => boolean;
 }
 
 // What's drawn over the screen: nothing, the empty room, the end of the queue, "Up next", the
 // waiting slate, the film leader counting down, or the big play button while it's paused.
-export type ScreenOverlay = 'none' | 'empty' | 'ended' | 'upNext' | 'waiting' | 'leader' | 'paused';
+export type ScreenOverlay = 'none' | 'empty' | 'ended' | 'upNext' | 'waiting' | 'leader' | 'paused' | 'live';
 
 const tickMs = 200;
 
@@ -116,8 +118,19 @@ export class RoomScreenStore {
     return phase === 'playing' && countdown && this.serverNow < at;
   }
 
+  get isLive(): boolean {
+    return this.#deps.isLive();
+  }
+
+  // The queue's video is what's on screen: there is one, and no live share covers it.
+  get showsFilm(): boolean {
+    return this.hasVideo && !this.isLive;
+  }
+
   get overlay(): ScreenOverlay {
     const { phase } = this.playback;
+
+    if (this.isLive) return 'live';
 
     if (phase === 'empty' || phase === 'ended' || phase === 'upNext') return phase;
 

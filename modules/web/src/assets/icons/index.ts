@@ -15,6 +15,7 @@ export { default as PlayIcon } from './play.svg?react';
 export { default as PlusIcon } from './plus.svg?react';
 export { default as RotateCcwIcon } from './rotate-ccw.svg?react';
 export { default as RotateCwIcon } from './rotate-cw.svg?react';
+export { default as ScreenShareIcon } from './screen-share.svg?react';
 export { default as SendIcon } from './send.svg?react';
 export { default as SkipForwardIcon } from './skip-forward.svg?react';
 export { default as SpinnerIcon } from './spinner.svg?react';

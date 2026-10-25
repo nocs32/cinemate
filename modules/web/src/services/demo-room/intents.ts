@@ -17,6 +17,7 @@ export interface DemoMoves {
   replay: (memberId: string, itemId: string) => void;
   report: (memberId: string, report: ViewerReport) => void;
   failed: (memberId: string, itemId: string, code: MediaErrorCode) => void;
+  startShare: (memberId: string) => void;
 }
 
 const ignore = (): void => undefined;
@@ -47,5 +48,8 @@ export const demoHandlers = (moves: DemoMoves): DemoHandlers => {
     holdUpNext: (_id, { held }) => cinema.holdUpNext(held, now()),
     status: (id, report) => moves.report(id, report),
     mediaError: (id, { itemId, code }) => moves.failed(id, itemId, code),
+    startShare: (id) => moves.startShare(id),
+    stopShare: (id) => cinema.stopShare(id),
+    watchStats: (id, { fps }) => cinema.watchStats(id, fps),
   };
 };

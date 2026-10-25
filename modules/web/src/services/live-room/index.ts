@@ -44,6 +44,7 @@ const listenToEvents = (room: Room, listeners: CinemaLinkListeners, now: () => n
   on('feed', (message) => view.feed(message));
   on('pong', listeners.pong);
   on('reaction', listeners.reaction);
+  on('shareKey', listeners.shareKey);
   on('error', listeners.refused);
 };
 

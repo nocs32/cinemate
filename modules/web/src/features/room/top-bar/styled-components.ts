@@ -61,6 +61,33 @@ export const RoomTopBarInviteButton = styled('button', {
   },
 });
 
+// Share a tab (spec §14.1): outlined, next to the bright invite button; red while you're live.
+export const RoomTopBarShareButton = styled('button', {
+  base: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    border: '1px solid',
+    borderColor: 'border.seam',
+    bg: 'transparent',
+    color: 'fg.default',
+    fontWeight: '600',
+    borderRadius: 'control',
+    height: '40px',
+    paddingInline: '14px',
+    fontSize: '14px',
+    whiteSpace: 'nowrap',
+    cursor: 'pointer',
+    _hover: { borderColor: 'fg.muted' },
+    _disabled: { opacity: '0.45', cursor: 'not-allowed' },
+    '& svg': { width: '16px', height: '16px' },
+  },
+  variants: {
+    live: { true: { borderColor: 'late', color: 'late', _hover: { borderColor: 'late' } } },
+    compact: { true: { height: '34px', paddingInline: '9px', fontSize: '13px' } },
+  },
+});
+
 export const RoomTopBarMenuContent = styled(Menu.Content, {
   base: { minWidth: '220px', bg: 'bg.panel', borderRadius: 'control', padding: '6px', boxShadow: 'floating', outline: '0', zIndex: '30' },
 });

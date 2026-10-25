@@ -11,7 +11,7 @@ interface RoomTheatreSeatsSeatProps {
 }
 
 // A seat: the person's colour and initial, their name, their player's status, and how often they've
-// kept the room waiting tonight.
+// kept the room waiting tonight. While someone shares, the status is how many frames a second they see (D31).
 export function RoomTheatreSeatsSeat({ view, compact, youLabel }: RoomTheatreSeatsSeatProps): ReactElement {
   return (
     <>
@@ -24,7 +24,12 @@ export function RoomTheatreSeatsSeat({ view, compact, youLabel }: RoomTheatreSea
         {view.name}
         {youLabel && !compact && ` ${youLabel}`}
       </RoomTheatreSeatsSeatName>
-      {!compact && <RoomTheatreSeatsSeatStatus tone={view.tone}>{view.statusLabel}</RoomTheatreSeatsSeatStatus>}
+      {!compact && !view.fpsLabel && <RoomTheatreSeatsSeatStatus tone={view.tone}>{view.statusLabel}</RoomTheatreSeatsSeatStatus>}
+      {!compact && view.fpsLabel && (
+        <RoomTheatreSeatsSeatStatus tone={view.fpsTone} title={view.fpsTitle}>
+          {view.fpsLabel}
+        </RoomTheatreSeatsSeatStatus>
+      )}
     </>
   );
 }

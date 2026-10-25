@@ -9,6 +9,7 @@ Watch videos together with friends in the browser, in sync and at full quality.
 - **Full quality:** every browser gets the video straight from the source, so each person watches at the best quality their own connection and screen allow, up to 4K60. Nothing is re-encoded or squeezed through anyone's upload, unlike sharing a screen on Discord (720p at 30 fps there).
 - **In sync:** play, pause, seek and skip happen for everyone. The room keeps everyone within 300 ms of each other. In testing, two players stayed 1–2 ms apart.
 - **It waits for whoever is slow, and says who:** someone buffers, watches an ad or falls behind, and the room pauses with "Waiting for Dima: buffering", then restarts everyone together on a 3, 2, 1 film-leader countdown. After 20 seconds the others can go on without them.
+- **Live share:** anyone in the room can show a browser tab (with its sound) or their screen to everyone, at up to 4K60, through a relay that copies the stream without re-encoding. The queue waits until they stop. The sharer picks the quality and whether the sound goes out; everyone else's seat shows how many frames a second they get.
 - **Only for you:** volume, quality, subtitles and fullscreen stay personal.
 - **Chat and reactions,** in English or Ukrainian, on a computer or a phone. A room disappears about 10 minutes after the last person leaves.
 
@@ -38,8 +39,11 @@ pnpm dev
 |---|---|
 | Web | http://localhost:5179 |
 | API | http://localhost:2573 (the web dev server forwards `/api/*`, and `/live` for rooms, to it) |
+| Relay | http://localhost:8889 (live share: the web dev server forwards `/media/*` to it) |
 
 Open the web URL and click **Open a room**, then share its link: everyone who opens it is in the same room. To try it alone, open the link in a second tab. Saving a file in `modules/core-api` restarts the API, which clears every room: open a new one afterwards.
+
+**Live share needs the relay** (MediaMTX). With Docker, `pnpm relay` runs it on this machine from `relay/`. Without Docker, point `CINEMATE_RELAY_URL` in `modules/web/.env.local` at another one (the Pi's: `http://192.168.88.48:8889`) and let it reach this machine's API with `ssh -N -R 2573:localhost:2573 pi`. Everything else works without it.
 
 `pnpm demo` runs the web app alone against a demo room in the browser, with no API: three sample viewers come in and fill the queue with Blender's open movies, and a fourth joins later. The **Demo** menu in the top bar makes Dima buffer, gives Oleh an ad (long enough to try "Go on without Oleh"), makes Marta fall behind, or adds and removes a viewer.
 
@@ -51,6 +55,7 @@ The ports sit one above Deeds' (5178 and 2572) and the table games', so every pr
 |---|---|
 | `pnpm dev` | Runs the web app and the API with hot reload |
 | `pnpm demo` | Runs the web app alone against the demo room, for working on the UI |
+| `pnpm relay` | Runs the live-share relay in Docker (`relay/`) |
 | `pnpm lint` | Lints every module; `pnpm lint --fix` fixes spacing automatically |
 | `pnpm typecheck` | Type-checks every module |
 | `pnpm test` | Runs the engine's and the API's tests |

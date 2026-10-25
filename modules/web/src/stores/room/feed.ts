@@ -55,6 +55,8 @@ const describe = (event: FeedEvent, t: Translate): string => {
       return t('feed.failed', { title: titleOr(event.title, t), reason: t(`feed.failure.${event.code}`) });
     case 'joined':
     case 'left':
+    case 'shareStarted':
+    case 'shareStopped':
       return t(`feed.${event.type}`);
     default:
       return describePlayback(event, t) ?? '';

@@ -43,6 +43,10 @@ export const limits = {
       // Twice a second from the browser, with room for jitter.
       status: { count: 6, windowMs: 1000 },
       mediaError: { count: 5, windowMs: 10_000 },
+      startShare: { count: 5, windowMs: 10_000 },
+      stopShare: { count: 5, windowMs: 10_000 },
+      // Every 2 s from each watcher (protocol `liveLimits.statsIntervalMs`), with room for jitter.
+      watchStats: { count: 3, windowMs: 2000 },
     } satisfies Record<CinemaIntentType, Rate>,
   },
   // YouTube's oEmbed, for titles (spec §4.2).

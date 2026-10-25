@@ -1,4 +1,15 @@
-import { syncLimits, type FeedEvent, type MediaErrorCode, type MediaSource, type PlaybackSnapshot, type QueueAuthor, type QueueItem, type ViewerStatus } from '@cinemate/protocol';
+import {
+  liveMediaPath,
+  syncLimits,
+  type FeedEvent,
+  type MediaErrorCode,
+  type MediaSource,
+  type PlaybackSnapshot,
+  type QueueAuthor,
+  type QueueItem,
+  type ShareSnapshot,
+  type ViewerStatus,
+} from '@cinemate/protocol';
 import { isReady, judgeReport, shownOffset, statusOf } from './judge.js';
 import * as playback from './playback.js';
 import { CinemaQueue, type QueueItemDetails } from './queue.js';
@@ -28,12 +39,14 @@ export interface CinemaMemberState {
   status: ViewerStatus;
   offsetMs: number | null;
   slowpokes: number;
+  watchFps: number | null;
 }
 
 export interface CinemaView {
   playback: PlaybackSnapshot;
   queue: QueueItem[];
   history: QueueItem[];
+  share: ShareSnapshot | null;
 }
 
 // One room's cinema (spec §5, §6): the queue, everyone's player, and the one playback record, with
@@ -44,6 +57,8 @@ export class Cinema {
   readonly queue: CinemaQueue;
   readonly viewers = new CinemaViewers();
   playback: playback.PlaybackState = playback.emptyPlayback;
+  // Someone showing a tab or their screen (spec §14), or null.
+  share: ShareSnapshot | null = null;
   #notices: CinemaNotice[] = [];
   readonly #deps: CinemaDeps;
 
@@ -69,6 +84,8 @@ export class Cinema {
   }
 
   leave(id: string, now: number): void {
+    if (this.share?.sharerId === id) this.#endShare();
+
     this.viewers.leave(id);
     this.playback = playback.forget(this.playback, id);
     this.tick(now);
@@ -131,6 +148,8 @@ export class Cinema {
   }
 
   play(byId: string, now: number): void {
+    this.#needNoShare();
+
     if (this.playback.phase === 'upNext') return this.#startNext(now);
 
     this.#needScreen();
@@ -139,18 +158,22 @@ export class Cinema {
   }
 
   pause(byId: string, now: number): void {
+    this.#needNoShare();
     this.#needScreen();
     this.playback = playback.pause(this.playback, now);
     this.#notice(byId, { type: 'paused', at: this.playback.position });
   }
 
   seek(byId: string, position: number, now: number): void {
+    this.#needNoShare();
     this.#needScreen();
     this.playback = playback.seek(this.playback, position, now);
     this.#notice(byId, { type: 'seeked', at: this.playback.position });
   }
 
   skip(byId: string, now: number): void {
+    this.#needNoShare();
+
     if (this.playback.phase === 'upNext') return this.#startNext(now);
 
     const item = this.#needScreen();
@@ -162,6 +185,8 @@ export class Cinema {
 
   // After 20 s of waiting, everyone else may carry on (D10); the slow ones catch up on their own.
   goOnWithout(byId: string, now: number): void {
+    this.#needNoShare();
+
     const { phase, waitSince } = this.playback;
 
     if (phase !== 'loading' || waitSince === null) throw new CinemaRuleError('NOTHING_PLAYING');
@@ -178,6 +203,7 @@ export class Cinema {
   }
 
   holdUpNext(held: boolean, now: number): void {
+    this.#needNoShare();
     this.playback = playback.holdUpNext(this.playback, held, now);
   }
 
@@ -203,9 +229,37 @@ export class Cinema {
     this.#startNext(now);
   }
 
+  // Live share (spec §14), one at a time (D29): sharing again replaces your own share. The video
+  // stops where it is and nobody is waited for until it ends (D30).
+  startShare(byId: string, shareId: string, now: number): ShareSnapshot {
+    if (this.share && this.share.sharerId !== byId) throw new CinemaRuleError('SHARE_TAKEN');
+
+    if (!this.share) this.#notice(byId, { type: 'shareStarted' });
+
+    this.share = { sharerId: byId, path: liveMediaPath(shareId), since: now };
+    this.playback = playback.holdForShare(this.playback, now);
+
+    return this.share;
+  }
+
+  // Only the sharer stops it (D29); leaving stops it too.
+  stopShare(byId: string): void {
+    if (!this.share) return;
+
+    if (this.share.sharerId !== byId) throw new CinemaRuleError('NOT_SHARING');
+
+    this.#endShare();
+  }
+
+  watchStats(id: string, fps: number): void {
+    if (this.share) this.viewers.recordWatch(id, fps);
+  }
+
   // The moves time makes: starting once everyone is ready, waiting for whoever falls out of step,
   // the end of a video, and the "Up next" card running out.
   tick(now: number): void {
+    if (this.share) return;
+
     const { phase, upNextAt, upNextHeld } = this.playback;
 
     if (phase === 'loading') this.#settle(now);
@@ -228,13 +282,13 @@ export class Cinema {
 
     const status = statusOf(this.playback, viewer, now);
 
-    return { entered: viewer.entered, status, offsetMs: shownOffset(status, viewer), slowpokes: viewer.slowpokes };
+    return { entered: viewer.entered, status, offsetMs: shownOffset(status, viewer), slowpokes: viewer.slowpokes, watchFps: viewer.watchFps };
   }
 
   view(): CinemaView {
     const waitingFor = this.playback.phase === 'loading' ? this.#pending() : [];
 
-    return { playback: playback.toPlaybackSnapshot(this.playback, waitingFor), queue: this.queue.items, history: this.queue.history };
+    return { playback: playback.toPlaybackSnapshot(this.playback, waitingFor), queue: this.queue.items, history: this.queue.history, share: this.share };
   }
 
   // Someone who comes in mid-video catches up on their own: the room doesn't wait for newcomers (§5.5).
@@ -247,6 +301,18 @@ export class Cinema {
 
     // A link pasted into a room with nothing on loads paused: someone presses play for everyone.
     if (this.playback.phase === 'empty' || this.playback.phase === 'ended') this.#startNext(now, false);
+  }
+
+  #needNoShare(): void {
+    if (this.share) throw new CinemaRuleError('SHARE_ON');
+  }
+
+  #endShare(): void {
+    if (!this.share) return;
+
+    this.#notice(this.share.sharerId, { type: 'shareStopped' });
+    this.share = null;
+    this.viewers.clearWatch();
   }
 
   #needScreen(): QueueItem {

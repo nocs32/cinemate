@@ -1,4 +1,4 @@
-import type { MemberSnapshot, ViewerStatus } from '@cinemate/protocol';
+import { liveLimits, type MemberSnapshot, type ViewerStatus } from '@cinemate/protocol';
 import { makeAutoObservable } from 'mobx';
 import type { Translate } from '../locale';
 import type { StatusTone, ViewerColor } from './types';
@@ -22,6 +22,10 @@ export interface ViewerView {
   slowpokes: number;
   tallyLabel: string;
   tallyTitle: string;
+  // While someone shares: "58 fps", and whether that's smooth (D31). Empty when there's no share.
+  fpsLabel: string;
+  fpsTone: StatusTone;
+  fpsTitle: string;
 }
 
 export interface RoomPresenceDeps {
@@ -109,6 +113,9 @@ export class RoomPresenceStore {
       slowpokes: member.slowpokes,
       tallyLabel: t('seats.tally', { count: member.slowpokes }),
       tallyTitle: t('seats.tallyTitle', { count: member.slowpokes }),
+      fpsLabel: member.watchFps === null ? '' : t('seats.fps', { fps: member.watchFps }),
+      fpsTone: member.watchFps !== null && member.watchFps < liveLimits.smoothFps ? 'late' : 'sync',
+      fpsTitle: t('seats.fpsTitle'),
     };
   }
 }

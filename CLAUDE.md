@@ -3,7 +3,8 @@
 A watch-together site for a group of friends:
 - open a room, send the link, paste YouTube links or video files into a shared queue; play, pause, seek and skip are synced for everyone;
 - every browser streams straight from the source at the best quality its connection allows (no Discord-style 720p/30 fps cap), and only small control messages go through the server;
-- when someone falls out of step (buffering, an ad, more than 300 ms off), the room waits for them and says who ("Waiting for Dima: buffering"), then everyone restarts together on a film-leader countdown. The room is thrown away about 10 minutes after everyone leaves.
+- when someone falls out of step (buffering, an ad, more than 300 ms off), the room waits for them and says who ("Waiting for Dima: buffering"), then everyone restarts together on a film-leader countdown. The room is thrown away about 10 minutes after everyone leaves;
+- anyone can share a browser tab or their screen live (spec §14): the queue waits, and the stream goes through a relay (MediaMTX) that copies it to everyone without re-encoding.
 
 It's not one of the table games, but it's built like them: the same stack, house rules and way of working as Bluff Table (`../bluff-table`), which it was copied from. Fixes to shared parts get copied between the projects by hand. The full spec is in `.scratch/SPEC.md`. Read §0 "Decisions so far" before planning any feature: *Decided* items are settled, *Proposed* ones wait for the user's yes.
 
@@ -36,6 +37,10 @@ The user plays Scribble Table, so knowing its words would spoil it. **Never open
   - **The demo room** (`services/demo-room`): the engine's `Cinema` in the browser with sample viewers whose pretend players buffer, sit through an ad or fall behind on cue (the top bar's Demo menu), for `pnpm demo`. `pnpm dev` uses live rooms (`services/live-room`).
   - **Silent test tabs:** set `sessionStorage['cinemate:silent'] = '1'` in a test tab before opening a room, so nobody hears the videos you test. Always do this in the built-in browser.
   - **Screenshots of a playing YouTube video can be a stale frame** in the built-in browser: check overlays through the DOM (`window.cinemate` in dev) and take a second screenshot.
+- **Live share** (spec §14, D26–D36): the room says who shares (`Cinema.share`, one at a time); the sharer's browser alone gets a key (`shareKey`) and publishes to the relay over WHIP at `/media/live/<share id>/whip`; everyone else watches over WHEP. The relay (MediaMTX) asks core-api at `/relay/auth` before every publish and watch (`MediaShares`: only a share a room has open, only the sharer's key publishes), so streams only ever exist inside a room. The video skips the tunnel: UDP 8189, forwarded by the MikroTik to the Pi.
+  - **Web:** `services/live-media` (capture, WHIP/WHEP, the live screen over the player, Chrome's bitrate floor: without it Chrome's bandwidth guess stalls and the picture shrinks to 144p), `stores/room/live` (`RoomLiveStore` for everyone, `RoomLiveSharerStore` for your own share: quality and sound, both changeable while live).
+  - **The relay in dev:** `pnpm relay` (Docker, `relay/`), or the Pi's through `CINEMATE_RELAY_URL` in `modules/web/.env.local` plus `ssh -N -R 2573:localhost:2573 pi` so it can reach this core-api. On the Pi it's tables-host's `media` service.
+  - **Testing in the built-in browser:** it has no picker, so stub `navigator.mediaDevices.getDisplayMedia` in the sharing tab with a canvas stream; real tabs need the user's Chrome.
 - `modules/core-api`: backend. Node + Express 5 + Colyseus 0.18 (live rooms), one process on :2573. `cinema-room/` wires the parts: members (names and colours), the engine's `Cinema` ticked every 250 ms, the feed, the outbox (one view for everyone, sent when it changed), rate limits (`limits.ts`), the lifecycle (10 minutes empty), and titles (`titles.ts`: YouTube's oEmbed, only ever called with a parsed video id; the room waits for it before adding a YouTube link). `intents.ts` maps each intent to one call. Room tests run a real server on port 2596 with titles stubbed.
 - `modules/protocol`: the shared contract. Intent schemas, server events, error codes, the sync numbers (`syncLimits`).
 - `modules/engine`: pure logic shared by both apps: link reading (`links.ts`), the room clock (`clock.ts`), and the cinema (`cinema/`): the queue, everyone's player and the playback state machine, with every rule for keeping them together.
@@ -60,6 +65,7 @@ The user plays Scribble Table, so knowing its words would spoil it. **Never open
 pnpm install
 pnpm dev           # web on http://localhost:5179 + core-api on :2573 (Vite forwards /api, and /live for rooms)
 pnpm demo          # web only, against the demo room (no server): for UI work
+pnpm relay         # the live-share relay in Docker (see Layout → Live share)
 pnpm lint          # add --fix to auto-fix spacing
 pnpm typecheck
 pnpm test          # engine + core-api; one module: pnpm --filter @cinemate/engine test

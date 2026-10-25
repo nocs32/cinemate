@@ -20,6 +20,8 @@ export interface Viewer {
   badReports: number;
   // Times they kept the room waiting tonight (D11).
   slowpokes: number;
+  // While someone shares: the frames a second their screen shows (D31).
+  watchFps: number | null;
 }
 
 // Everyone's player, as the cinema judges it. People are added on joining and removed on leaving.
@@ -35,7 +37,7 @@ export class CinemaViewers {
   }
 
   join(id: string, entered: boolean): void {
-    this.#viewers.set(id, { id, entered, connected: true, report: null, reportedAt: 0, offsetMs: null, badReports: 0, slowpokes: 0 });
+    this.#viewers.set(id, { id, entered, connected: true, report: null, reportedAt: 0, offsetMs: null, badReports: 0, slowpokes: 0, watchFps: null });
   }
 
   leave(id: string): void {
@@ -63,6 +65,19 @@ export class CinemaViewers {
     viewer.reportedAt = now;
     viewer.offsetMs = offsetMs;
     viewer.badReports = bad ? viewer.badReports + 1 : 0;
+  }
+
+  recordWatch(id: string, fps: number): void {
+    const viewer = this.#viewers.get(id);
+
+    if (viewer) viewer.watchFps = Math.round(fps);
+  }
+
+  // The share ended: nobody is watching one any more.
+  clearWatch(): void {
+    this.#viewers.forEach((viewer) => {
+      viewer.watchFps = null;
+    });
   }
 
   blame(id: string): void {

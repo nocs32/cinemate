@@ -1,13 +1,17 @@
 import type { RoomClockStore } from '../stores/room/clock';
 import type { RoomLightsStore } from '../stores/room/lights';
-import type { RoomScreenDriverStore } from '../stores/room/screen/driver';
+
+// Whoever lets the sound on: the room, for its videos and its live share.
+interface SoundGate {
+  allowSound: () => void;
+}
 
 const events = ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart'] as const;
 
 // Any movement brings the house lights back up; the first click or key lets the sound on; a tab that
 // comes back checks the room clock again (browsers slow hidden tabs down, spec §5.6). Started once in
 // index.tsx; returns a function that stops it.
-export const watchActivity = (lights: RoomLightsStore, clock: RoomClockStore, driver: RoomScreenDriverStore): (() => void) => {
+export const watchActivity = (lights: RoomLightsStore, clock: RoomClockStore, driver: SoundGate): (() => void) => {
   const wake = (event: Event): void => {
     lights.wake();
 

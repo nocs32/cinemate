@@ -111,7 +111,15 @@ export class DemoReferee {
       replay: (id, itemId) => this.#cinema.replay(this.#author(id), itemId, this.#deps.now()),
       report: (id, report) => this.#cinema.report(id, report, this.#deps.now()),
       failed: (id, itemId, code) => this.#cinema.failed(id, itemId, code, this.#deps.now()),
+      startShare: (id) => this.#startShare(id),
     });
+  }
+
+  // No relay here: the share's key is a stand-in, and you watch your own capture.
+  #startShare(id: string): void {
+    const share = this.#cinema.startShare(id, this.#deps.createId(), this.#deps.now());
+
+    this.#listeners.shareKey({ path: share.path, key: 'demo' });
   }
 
   #enter(id: string, name: string, color: ViewerColor): void {
@@ -186,6 +194,10 @@ export class DemoReferee {
 
   #reportSamples(): void {
     this.#samples.reportAll(this.#cinema);
+
+    // While you share, the sample viewers see it at a healthy 58 to 60 frames a second.
+    if (this.#cinema.share) this.#samples.ids.forEach((id) => this.#cinema.watchStats(id, 58 + this.#deps.random() * 2));
+
     this.#flush();
   }
 
@@ -214,7 +226,7 @@ export class DemoReferee {
     const members = [...this.#members.values()].map((member): MemberSnapshot => {
       const state = this.#cinema.member(member.id, now);
 
-      return { id: member.id, name: member.name, color: member.color, connected: member.connected, entered: state?.entered ?? false, status: state?.status ?? 'joining', offsetMs: state?.offsetMs ?? null, slowpokes: state?.slowpokes ?? 0 };
+      return { id: member.id, name: member.name, color: member.color, connected: member.connected, entered: state?.entered ?? false, status: state?.status ?? 'joining', offsetMs: state?.offsetMs ?? null, slowpokes: state?.slowpokes ?? 0, watchFps: state?.watchFps ?? null };
     });
 
     return { members, ...this.#cinema.view(), feed: this.#feed.items };

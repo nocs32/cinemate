@@ -1,0 +1,15 @@
+# `pnpm relay`: the live-share relay next to `pnpm dev` (see mediamtx.yml). Vite forwards /media to it.
+name: cinemate-relay
+
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:1.21.3
+    restart: 'no'
+    ports:
+      - 127.0.0.1:8889:8889
+      - 127.0.0.1:8189:8189/udp
+      - 127.0.0.1:8189:8189/tcp
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml:ro

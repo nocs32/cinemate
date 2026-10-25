@@ -52,6 +52,33 @@ export const RoomTheatreScreenPlayer = styled('div', {
   base: { position: 'absolute', inset: '0', '& iframe, & video, & > div': { width: '100%', height: '100%', display: 'block', border: '0', bg: 'black' } },
 });
 
+// A live share's picture, over the paused player (spec §14.1).
+export const RoomTheatreScreenLiveLayer = styled('div', {
+  base: { position: 'absolute', inset: '0', zIndex: '1', bg: 'black', '& video': { width: '100%', height: '100%', display: 'block', objectFit: 'contain' } },
+});
+
+// "Live · Anna", with the red dot of a camera that's on.
+export const RoomTheatreScreenLiveTag = styled('p', {
+  base: {
+    position: 'absolute',
+    top: '12px',
+    left: '12px',
+    zIndex: '2',
+    margin: '0',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '5px 12px 5px 10px',
+    borderRadius: 'full',
+    bg: 'bg.scrim',
+    fontSize: '13px',
+    fontWeight: '600',
+    letterSpacing: '0.02em',
+    pointerEvents: 'none',
+    '&::before': { content: '""', width: '8px', height: '8px', borderRadius: 'full', bg: 'late', animation: 'pulse 1.6s ease-in-out infinite' },
+  },
+});
+
 export const RoomTheatreScreenScrim = styled('div', {
   base: { position: 'absolute', inset: '0', zIndex: '2', display: 'flex', alignItems: 'center', justifyContent: 'center', bg: 'bg.scrim', backdropFilter: 'blur(3px)', animation: 'fadeIn 0.25s ease', padding: '16px' },
 });

@@ -6,6 +6,7 @@ import { PasteBox } from '../paste-box';
 import { RoomTopBarDemo } from './demo';
 import { RoomTopBarInvite } from './invite';
 import { RoomTopBarLanguage } from './language';
+import { RoomTopBarShare } from './share';
 import { RoomTopBarBrand, RoomTopBarCount, RoomTopBarRight, RoomTopBarRoot } from './styled-components';
 
 // The top bar (the style board): the wordmark (a link to the start page), the paste box in the middle, and on the right how many
@@ -24,6 +25,7 @@ export const RoomTopBar = observer(function RoomTopBar(): ReactElement {
         {!ui.layout.isCompact && <RoomTopBarCount>{room.presence.countLabel}</RoomTopBarCount>}
         {room.demo && <RoomTopBarDemo />}
         <RoomTopBarLanguage />
+        <RoomTopBarShare />
         <RoomTopBarInvite />
       </RoomTopBarRight>
     </RoomTopBarRoot>
