@@ -5,7 +5,10 @@ import './stores/configure-mobx';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app';
+import { watchActivity } from './services/activity';
 import { syncDocumentLanguage } from './services/document-language';
+import { watchKeys } from './services/keyboard';
+import { watchLayout } from './services/layout';
 import { createRootStore } from './stores';
 
 const rootElement = document.getElementById('root');
@@ -22,6 +25,10 @@ if (import.meta.env.DEV) {
 }
 
 syncDocumentLanguage(store.locale);
+watchLayout(store.ui.layout);
+watchActivity(store.room.lights, store.room.clock);
+watchKeys(store.room.controls);
+store.room.open();
 
 createRoot(rootElement).render(
   <StrictMode>

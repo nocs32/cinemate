@@ -29,6 +29,12 @@ The user plays Scribble Table, so knowing its words would spoil it. **Never open
 
 ## Layout
 - `modules/web`: frontend. Vite + React 19 + TypeScript, Panda CSS, MobX, Ark UI, i18next (English and Ukrainian), hls.js for HLS streams, YouTube's IFrame API for YouTube.
+  - **The players** (`services/players`): `YouTubeScreenPlayer` (YouTube's own bar showing, D12; gets ready by playing muted, then pausing and seeking back; reports clicks on its bar as user actions and a frozen clock as `stuck`) and `VideoScreenPlayer` (files, and HLS through hls.js), behind `ScreenPlayer`. The host in `index.ts` swaps one for the other.
+  - **The sync driver** (`stores/room/screen/driver.ts`): turns the room's playback into commands (load, hold paused at the position, start at the agreed moment by the room clock) and reports twice a second. It never corrects the player while it's counted in: the room waits instead (D7). Only when excused (went on without, came in mid-video) does it catch up alone. Until someone joins, their player only gets ready.
+  - **The room clock** (`stores/room/clock.ts`): pings, the engine's `clockOffset`.
+  - **The screen** (`stores/room/screen/index.ts`, `waiting.ts`, `controls.ts`): the overlays (empty, ended, up next, the waiting slate, the film leader) and the control bar for files.
+  - **The demo room** (`services/demo-room`): the engine's `Cinema` in the browser with sample viewers whose pretend players buffer, sit through an ad or fall behind on cue (the top bar's Demo menu). Until M2, `pnpm dev` uses it too.
+  - **Screenshots of a playing YouTube video can be a stale frame** in the built-in browser: check overlays through the DOM (`window.cinemate` in dev) and take a second screenshot.
 - `modules/core-api`: backend. Node + Express 5 + Colyseus 0.18 (live rooms), one process on :2573.
 - `modules/protocol`: the shared contract. Intent schemas, server events, error codes, the sync numbers (`syncLimits`).
 - `modules/engine`: pure logic shared by both apps: link reading (`links.ts`), the room clock (`clock.ts`), and the cinema (`cinema/`): the queue, everyone's player and the playback state machine, with every rule for keeping them together.
